@@ -19,7 +19,7 @@ fn main() {
 
 fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32]{
     
-    println!("Hello RISC-V world!");
+    println!("Hello Rust RISC-V world!");
     
     let mut pc: i32 = 0;
 
