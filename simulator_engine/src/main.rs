@@ -47,18 +47,63 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
                 reg[rd as usize] = imm3112;
                 println!("LUI x{}, {}", rd, imm3112);
             }
+            0x63 => match funct3 {
+                0x00 => {
+                    if reg[rs1 as usize] == reg[rs2 as usize] {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                0x01 => {
+                    if reg[rs1 as usize] != reg[rs2 as usize] {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                0x04 => {
+                    if reg[rs1 as usize] < reg[rs2 as usize] {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                0x05 => {
+                    if reg[rs1 as usize] >= reg[rs2 as usize] {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                0x06 => {
+                    if (reg[rs1 as usize] as u32) < (reg[rs2 as usize] as u32) {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                0x07 => {
+                    if (reg[rs1 as usize] as u32) >= (reg[rs2 as usize] as u32) {
+                        pc += sb_format(&instruction);
+                    };
+                    println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                ),
+            },
             0x67 => match funct3 {
                 0x00 => {
                     reg[rd as usize] = pc + 4;
                     pc = reg[rs1 as usize] + imm110;
                     println!("JALR x{}, x{}, {}", rd, rs1, imm110);
                 }
-                unimplemented => println!("Funct3 {:#02x} not implemented...", unimplemented),
-            }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                ),
+            },
             0x6F => {
                 reg[rd as usize] = pc + 4;
-                pc = pc + imm3112;
-                println!("JAL x{}, {}", rd, imm3112);
+                pc = pc + uj_format(&instruction);
+                println!("JAL x{}, {}", rd, uj_format(&instruction));
             }
             0x73 => {
                 println!("ECALL");
@@ -95,6 +140,22 @@ fn convert_to_instructions(bytes: &Vec<u8>) -> Vec<i32> {
         i += 4;
     }
     instructions
+}
+
+fn uj_format(instruction: &i32) -> i32 {
+    let bit20: i32 = (instruction >> 31) << 20; // 20
+    let bit101: i32 = ((instruction >> 21) & 0x3ff) << 1; // 10 9 8 7 6 5 4 3 2 1
+    let bit1912 = instruction & 0xff000; // 19 18 17 16 15 14 13 12
+    let bit11 = (instruction & 0x100000) >> 9; // 11
+    ((bit101 | bit1912) | bit11) | bit20
+}
+
+fn sb_format(instruction: &i32) -> i32 {
+    let bit11 = (instruction & 0x80) << 4; // 11
+    let bit12 = (instruction >> 31) << 12; // 12
+    let bit41 = ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
+    let bit105 = ((instruction >> 25) & 0x3f) << 5; // 10 9 8 7 6 5
+    ((bit41 | bit105) | bit11) | bit12
 }
 
 fn print_instructions(instructions: &Vec<i32>) {
