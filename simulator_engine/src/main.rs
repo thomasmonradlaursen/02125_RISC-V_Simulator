@@ -29,11 +29,54 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
         let rs2 = (instruction >> 20) & 0x01f;
         let imm3112 = (instruction >> 12) << 12;
         let imm110 = instruction >> 20;
+        let shamt = (instruction >> 20) & 0x01f;
 
         match opcode {
-            0x13 => {
-                reg[rd as usize] = reg[rs1 as usize] + imm110;
-                println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
+            0x13 => match funct3 {
+                0x00 => {
+                    reg[rd as usize] = reg[rs1 as usize] + imm110;
+                    println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
+                }
+                0x01 => {
+                    reg[rd as usize] = reg[rs1 as usize] << shamt;
+                    println!("SLLI x{}, x{}, {}", rd, rs1, shamt);
+                }
+                0x02 => {
+                    if reg[rs1 as usize] < imm110 {
+                        reg[rd as usize] = 1;
+                    } else {
+                        reg[rd as usize] = 0;
+                    }
+                    println!("SLTI x{}, x{}, {}", rd, rs1, imm110);
+                }
+                0x03 => {
+                    if (reg[rs1 as usize] as u32) < (imm110 as u32) {
+                        reg[rd as usize] = 1;
+                    } else {
+                        reg[rd as usize] = 0;
+                    }
+                    println!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
+                }
+                0x04 => {
+                    reg[rd as usize] = reg[rs1 as usize] ^ imm110;
+                    println!("XORI x{}, x{}, {}", rd, rs1, imm110);
+                }
+                // TODO:
+                0x05 => {
+                    reg[rd as usize] = ((reg[rs1 as usize] as u32) >> (shamt as u32)) as i32;
+                    println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
+                }
+                0x06 => {
+                    reg[rd as usize] = reg[rs1 as usize] | imm110;
+                    println!("ORI x{}, x{}, {}", rd, rs1, imm110);
+                }
+                0x07 => {
+                    reg[rd as usize] = reg[rs1 as usize] & imm110;
+                    println!("ANDI x{}, x{}, {}", rd, rs1, imm110);
+                }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode),
             }
             0x17 => {
                 reg[rd as usize] = pc + imm3112;
