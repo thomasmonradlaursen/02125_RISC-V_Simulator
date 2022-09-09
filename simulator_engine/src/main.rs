@@ -24,6 +24,7 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
         let instruction = instructions[(pc >> 2) as usize];
         let opcode = instruction & 0x7f;
         let funct3 = (instruction >> 12) & 0x03;
+        let funct7 = instruction >> 25;
         let rd = (instruction >> 7) & 0x01f;
         let rs1 = (instruction >> 15) & 0x01f;
         let rs2 = (instruction >> 20) & 0x01f;
@@ -62,10 +63,20 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
                     println!("XORI x{}, x{}, {}", rd, rs1, imm110);
                 }
                 // TODO:
-                0x05 => {
-                    reg[rd as usize] = ((reg[rs1 as usize] as u32) >> (shamt as u32)) as i32;
-                    println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
-                }
+                0x05 => match funct7 {
+                    0x00 => {
+                        reg[rd as usize] = ((reg[rs1 as usize] as u32) >> (shamt as u32)) as i32;
+                        println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
+                    }
+                    0x20 => {
+                        reg[rd as usize] = reg[rs1 as usize] >> shamt;
+                        println!("SRAI x{}, x{}, {}", rd, rs1, shamt);
+                    }
+                    unimplemented => println!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    ),
+                },
                 0x06 => {
                     reg[rd as usize] = reg[rs1 as usize] | imm110;
                     println!("ORI x{}, x{}, {}", rd, rs1, imm110);
@@ -76,16 +87,79 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode),
-            }
+                    unimplemented, opcode
+                ),
+            },
             0x17 => {
                 reg[rd as usize] = pc + imm3112;
                 println!("AUIPC x{}, {}", rd, imm3112);
             }
-            0x33 => {
-                reg[rd as usize] = reg[rs1 as usize] + reg[rs2 as usize];
-                println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
-            }
+            0x33 => match funct3 {
+                0x00 => match funct7 {
+                    0x00 => {
+                        reg[rd as usize] = reg[rs1 as usize] + reg[rs2 as usize];
+                        println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
+                    }
+                    0x20 => {
+                        reg[rd as usize] = reg[rs1 as usize] - reg[rs2 as usize];
+                        println!("SUB x{}, x{}, x{}", rd, rs1, rs2);
+                    }
+                    unimplemented => println!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    ),
+                },
+                0x01 => {
+                    reg[rd as usize] = reg[rs1 as usize] << reg[rs2 as usize];
+                    println!("SLL x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x02 => {
+                    if reg[rs1 as usize] < reg[rs2 as usize] {
+                        reg[rd as usize] = 1;
+                    } else {
+                        reg[rd as usize] = 0;
+                    }
+                    println!("SLT x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x03 => {
+                    if (reg[rs1 as usize] as u32) < (reg[rs2 as usize] as u32) {
+                        reg[rd as usize] = 1;
+                    } else {
+                        reg[rd as usize] = 0;
+                    }
+                    println!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x04 => {
+                    reg[rd as usize] = reg[rs1 as usize] ^ reg[rs2 as usize];
+                    println!("XOR x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x05 => match funct7 {
+                    0x00 => {
+                        reg[rd as usize] = ((reg[rs1 as usize] as u32) >> (reg[rs2 as usize] as u32)) as i32;
+                        println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
+                    }
+                    0x20 => {
+                        reg[rd as usize] = reg[rs1 as usize] >>  reg[rs2 as usize];
+                        println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
+                    }
+                    unimplemented => println!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    ),
+                }
+                0x06 => {
+                    reg[rd as usize] = reg[rs1 as usize] | reg[rs2 as usize];
+                    println!("OR x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x07 => {
+                    reg[rd as usize] = reg[rs1 as usize] & reg[rs2 as usize];
+                    println!("AND x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                ),
+            },
             0x37 => {
                 reg[rd as usize] = imm3112;
                 println!("LUI x{}, {}", rd, imm3112);
@@ -157,6 +231,7 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
             unimplemented => println!("Opcode {:#02x} not implemented...", unimplemented),
         }
 
+        reg[0] = 0;
         pc += 4;
         if (pc >> 2) >= instructions.len() as i32 {
             break;
