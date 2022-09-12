@@ -18,6 +18,8 @@ fn main() {
     let res = simulate(reg, mem, &len);
 
     print_registers(&res);
+
+    print_registers_as_char(&res);
 }
 
 fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> [i32; 32] {
@@ -302,7 +304,7 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
 
         reg[0] = 0;
 
-        //print_registers_not_zerp(&reg);
+        print_registers_not_zero(&reg);
 
         pc += 16;
 
@@ -382,7 +384,15 @@ fn print_registers(registers: &[i32; 32]) {
     }
 }
 
-fn print_registers_not_zerp(registers: &[i32; 32]) {
+fn print_registers_as_char(registers: &[i32; 32]) {
+    let mut count = 0;
+    for register in registers {
+        println!("Reg[{:>2}]: {:?}", count, (*register as u8) as char);
+        count += 1;
+    }
+}
+
+fn print_registers_not_zero(registers: &[i32; 32]) {
     let mut count = 0;
     let zero = 0;
     for register in registers {
