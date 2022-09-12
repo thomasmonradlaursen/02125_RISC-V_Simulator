@@ -26,7 +26,7 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
     let mut pc: usize = 0;
 
     loop {
-        let instruction = convert_to_instruction(&mem[(pc>>2)..((pc>>2)+4)]);
+        let instruction = convert_to_instruction(&mem[(pc >> 2)..((pc >> 2) + 4)]);
         let opcode = instruction & 0x7f;
         let funct3 = (instruction >> 12) & 0x07;
         let funct7 = instruction >> 25;
@@ -41,18 +41,39 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
             0x03 => match funct3 {
                 0x00 => {
                     reg[rd] = mem[(reg[rs1] + imm110) as usize] as i32;
-                    println!("LB x{}, x{}, {}", rd, rs1, imm110);
+                    println!("LB x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x01 => {
-                    let short: [u8; 4] = [mem[(reg[rs1] + imm110) as usize], mem[((reg[rs1] + imm110) + 1) as usize], 0, 0];
+                    let index = (reg[rs1] + imm110) as usize;
+                    let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
                     reg[rd] = i32::from_be_bytes(short);
-                    println!("LH x{}, x{}, {}", rd, rs1, imm110);
+                    println!("LH x{}, {}(x{})", rd, imm110, rs1);
+                }
+                0x02 => {
+                    let index = (reg[rs1] + imm110) as usize;
+                    let integer: [u8; 4] =
+                        [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
+                    reg[rd] = i32::from_be_bytes(integer);
+                    println!("LW x{}, {}(x{})", rd, imm110, rs1);
+                }
+                0x04 => {
+                    let index = (reg[rs1] + imm110) as usize;
+                    let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
+                    reg[rd] = u32::from_be_bytes(short) as i32;
+                    println!("LHU x{}, {}(x{})", rd, imm110, rs1);
+                }
+                0x05 => {
+                    let index = (reg[rs1] + imm110) as usize;
+                    let integer: [u8; 4] =
+                        [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
+                    reg[rd] = u32::from_be_bytes(integer) as i32;
+                    println!("LWU x{}, {}(x{})", rd, imm110, rs1);
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
                     unimplemented, opcode
                 ),
-            }
+            },
             0x13 => match funct3 {
                 0x00 => {
                     reg[rd] = reg[rs1] + imm110;
@@ -114,6 +135,34 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                 reg[rd] = pc as i32 + imm3112;
                 println!("AUIPC x{}, {}", rd, imm3112);
             }
+            0x23 => match funct3 {
+                0x00 => {
+                    let offset = s_format(&instruction);
+                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    mem[reg[rs1] as usize + offset] = bytes[0];
+                    println!("SB x{}, {}(x{})", rd, offset, rs1);
+                }
+                0x01 => {
+                    let offset = s_format(&instruction);
+                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    mem[reg[rs1] as usize + offset] = bytes[0];
+                    mem[reg[rs1] as usize + offset + 1] = bytes[1];
+                    println!("SH x{}, {}(x{})", rd, offset, rs1);
+                }
+                0x02 => {
+                    let offset = s_format(&instruction);
+                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    mem[reg[rs1] as usize + offset] = bytes[0];
+                    mem[reg[rs1] as usize + offset + 1] = bytes[1];
+                    mem[reg[rs1] as usize + offset + 2] = bytes[2];
+                    mem[reg[rs1] as usize + offset + 3] = bytes[3];
+                    println!("SW x{}, {}(x{})", rd, offset, rs1);
+                }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                ),
+            },
             0x33 => match funct3 {
                 0x00 => match funct7 {
                     0x00 => {
@@ -159,14 +208,14 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                         println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
                     }
                     0x20 => {
-                        reg[rd] = reg[rs1] >>  reg[rs2];
+                        reg[rd] = reg[rs1] >> reg[rs2];
                         println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
                     }
                     unimplemented => println!(
                         "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
                         unimplemented, funct3, opcode
                     ),
-                }
+                },
                 0x06 => {
                     reg[rd] = reg[rs1] | reg[rs2];
                     println!("OR x{}, x{}, x{}", rd, rs1, rs2);
@@ -279,9 +328,9 @@ fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
 }
 
 fn convert_to_instruction(bytes: &[u8]) -> i32 {
-        let instruction: [u8; 4] = [bytes[3], bytes[2], bytes[1], bytes[0]];
-        let next = i32::from_be_bytes(instruction);
-        next
+    let instruction: [u8; 4] = [bytes[3], bytes[2], bytes[1], bytes[0]];
+    let next = i32::from_be_bytes(instruction);
+    next
 }
 
 fn uj_format(instruction: &i32) -> usize {
@@ -300,12 +349,18 @@ fn sb_format(instruction: &i32) -> usize {
     (((bit41 | bit105) | bit11) | bit12) as usize
 }
 
+fn s_format(instruction: &i32) -> usize {
+    let bit40 = (instruction >> 7) & 0x1f;
+    let bit115 = (instruction >> 25) << 5;
+    (bit40 | bit115) as usize
+}
+
 fn print_mem_instructions(mem: &[u8], len: &usize) {
     let mut count = 0;
     while count < *len {
         print!("{:08b} ", mem[count]);
         count = count + 1;
-        if count%4 == 0 {
+        if count % 4 == 0 {
             println!();
         }
     }
@@ -314,7 +369,7 @@ fn print_mem_instructions(mem: &[u8], len: &usize) {
 fn print_instructions(mem: &[u8], len: &usize) {
     let mut count = 0;
     while count < *len {
-        println!("{:032b}", convert_to_instruction(&mem[count..count+4]));
+        println!("{:032b}", convert_to_instruction(&mem[count..count + 4]));
         count = count + 4;
     }
 }
