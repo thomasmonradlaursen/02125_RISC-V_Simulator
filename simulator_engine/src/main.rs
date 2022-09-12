@@ -6,24 +6,29 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
-    let instructions = convert_to_instructions(&read_bytes(filename));
 
+    let mut mem: [u8; 1048576] = [0; 1048576];
+    let len = read_bytes_to_mem(filename, &mut mem);
+
+    print_mem_instructions(&mem, &len);
+
+    print_instructions(&mem, &len);
     //print_instructions(&instructions);
 
-    let res = simulate(reg, instructions);
+    let res = simulate(reg, mem, &len);
 
     print_registers(&res);
 }
 
-fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
+fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> [i32; 32] {
     println!("Hello Rust RISC-V world!");
 
-    let mut pc: i32 = 0;
+    let mut pc: usize = 0;
 
     loop {
-        let instruction = instructions[(pc >> 2) as usize];
+        let instruction = convert_to_instruction(&mem[(pc>>2)..((pc>>2)+4)]);
         let opcode = instruction & 0x7f;
-        let funct3 = (instruction >> 12) & 0x03;
+        let funct3 = (instruction >> 12) & 0x07;
         let funct7 = instruction >> 25;
         let rd = (instruction >> 7) & 0x01f;
         let rs1 = (instruction >> 15) & 0x01f;
@@ -33,6 +38,21 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
         let shamt = (instruction >> 20) & 0x01f;
 
         match opcode {
+            0x03 => match funct3 {
+                0x00 => {
+                    reg[rd as usize] = mem[(reg[rs1 as usize] + imm110) as usize] as i32;
+                    println!("LB x{}, x{}, {}", rd, rs1, imm110);
+                }
+                0x01 => {
+                    let short: [u8; 4] = [mem[(reg[rs1 as usize] + imm110) as usize], mem[((reg[rs1 as usize] + imm110) + 1) as usize], 0, 0];
+                    reg[rd as usize] = i32::from_be_bytes(short);
+                    println!("LH x{}, x{}, {}", rd, rs1, imm110);
+                }
+                unimplemented => println!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                ),
+            }
             0x13 => match funct3 {
                 0x00 => {
                     reg[rd as usize] = reg[rs1 as usize] + imm110;
@@ -91,7 +111,7 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
                 ),
             },
             0x17 => {
-                reg[rd as usize] = pc + imm3112;
+                reg[rd as usize] = pc as i32 + imm3112;
                 println!("AUIPC x{}, {}", rd, imm3112);
             }
             0x33 => match funct3 {
@@ -208,8 +228,8 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
             },
             0x67 => match funct3 {
                 0x00 => {
-                    reg[rd as usize] = pc + 4;
-                    pc = reg[rs1 as usize] + imm110;
+                    reg[rd as usize] = pc as i32 + 4;
+                    pc = (reg[rs1 as usize] + imm110) as usize;
                     println!("JALR x{}, x{}, {}", rd, rs1, imm110);
                 }
                 unimplemented => println!(
@@ -218,7 +238,7 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
                 ),
             },
             0x6F => {
-                reg[rd as usize] = pc + 4;
+                reg[rd as usize] = (pc + 4) as i32;
                 pc = pc + uj_format(&instruction);
                 println!("JAL x{}, {}", rd, uj_format(&instruction));
             }
@@ -232,8 +252,12 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
         }
 
         reg[0] = 0;
-        pc += 4;
-        if (pc >> 2) >= instructions.len() as i32 {
+
+        //print_registers_not_zerp(&reg);
+
+        pc += 16;
+
+        if (pc >> 2) >= *program_len {
             break;
         }
     }
@@ -243,49 +267,74 @@ fn simulate(mut reg: [i32; 32], instructions: Vec<i32>) -> [i32; 32] {
     reg
 }
 
-fn read_bytes(filename: &String) -> Vec<u8> {
+fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
     let content = fs::read(filename).expect("File not found");
-    content
-}
-
-fn convert_to_instructions(bytes: &Vec<u8>) -> Vec<i32> {
-    let mut instructions: Vec<i32> = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        let instruction: [u8; 4] = [bytes[i + 3], bytes[i + 2], bytes[i + 1], bytes[i]];
-        let next = i32::from_be_bytes(instruction);
-        instructions.push(next);
-        i += 4;
+    let mut count = 0;
+    while count < content.len() {
+        mem[count] = content[count];
+        count = count + 1;
     }
-    instructions
+    println!("Bytes have been loaded to memory");
+    content.len()
 }
 
-fn uj_format(instruction: &i32) -> i32 {
+fn convert_to_instruction(bytes: &[u8]) -> i32 {
+        let instruction: [u8; 4] = [bytes[3], bytes[2], bytes[1], bytes[0]];
+        let next = i32::from_be_bytes(instruction);
+        next
+}
+
+fn uj_format(instruction: &i32) -> usize {
     let bit20: i32 = (instruction >> 31) << 20; // 20
     let bit101: i32 = ((instruction >> 21) & 0x3ff) << 1; // 10 9 8 7 6 5 4 3 2 1
     let bit1912 = instruction & 0xff000; // 19 18 17 16 15 14 13 12
     let bit11 = (instruction & 0x100000) >> 9; // 11
-    ((bit101 | bit1912) | bit11) | bit20
+    (((bit101 | bit1912) | bit11) | bit20) as usize
 }
 
-fn sb_format(instruction: &i32) -> i32 {
+fn sb_format(instruction: &i32) -> usize {
     let bit11 = (instruction & 0x80) << 4; // 11
     let bit12 = (instruction >> 31) << 12; // 12
     let bit41 = ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
     let bit105 = ((instruction >> 25) & 0x3f) << 5; // 10 9 8 7 6 5
-    ((bit41 | bit105) | bit11) | bit12
+    (((bit41 | bit105) | bit11) | bit12) as usize
 }
 
-fn print_instructions(instructions: &Vec<i32>) {
-    for instruction in instructions {
-        println!("{:032b}", instruction);
+fn print_mem_instructions(mem: &[u8], len: &usize) {
+    let mut count = 0;
+    while count < *len {
+        print!("{:08b} ", mem[count]);
+        count = count + 1;
+        if count%4 == 0 {
+            println!();
+        }
+    }
+}
+
+fn print_instructions(mem: &[u8], len: &usize) {
+    let mut count = 0;
+    while count < *len {
+        println!("{:032b}", convert_to_instruction(&mem[count..count+4]));
+        count = count + 4;
     }
 }
 
 fn print_registers(registers: &[i32; 32]) {
     let mut count = 0;
     for register in registers {
-        println!("Reg[{:>2}]: {:>5}", count, register);
+        println!("Reg[{:>2}]: {:>10}", count, register);
         count += 1;
     }
+}
+
+fn print_registers_not_zerp(registers: &[i32; 32]) {
+    let mut count = 0;
+    let zero = 0;
+    for register in registers {
+        if *register != zero {
+            println!("Reg[{:>2}]: {:>5}", count, register);
+        }
+        count += 1;
+    }
+    println!("___")
 }
