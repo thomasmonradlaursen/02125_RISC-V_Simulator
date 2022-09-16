@@ -1,5 +1,8 @@
+use mylib::fetch;
+use mylib::fetch::Fetch;
 use std::env;
 use std::fs;
+use std::io;
 
 fn main() {
     let reg: [i32; 32] = [0; 32];
@@ -15,8 +18,6 @@ fn main() {
     print_instructions(&mem, &len);
     //print_instructions(&instructions);
 
-    decode(&mem, &len);
-
     let res = simulate(reg, mem, &len);
 
     print_registers(&res);
@@ -27,51 +28,50 @@ fn main() {
 fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> [i32; 32] {
     println!("Hello Rust RISC-V world!");
 
-    let mut pc: usize = 0;
+    let mut fetch = Fetch {
+        pc: 0,
+        instruction: 0,
+        next_instruction: 0,
+    };
 
-    let next_index = 16;
+    let stepwise = true;
 
     let mut branch: bool = false;
 
     loop {
-        let instruction = convert_to_instruction(&mem[(pc >> 2)..((pc >> 2) + 4)]);
-        let opcode = instruction & 0x7f;
-        let funct3 = (instruction >> 12) & 0x07;
-        let funct7 = instruction >> 25;
-        let rd = ((instruction >> 7) & 0x01f) as usize;
-        let rs1 = ((instruction >> 15) & 0x01f) as usize;
-        let rs2 = ((instruction >> 20) & 0x01f) as usize;
-        let imm3112 = (instruction >> 12) << 12;
-        let imm110 = (instruction >> 20);
-        let shamt = (instruction >> 20) & 0x01f;
+        fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
+        let opcode = fetch.instruction & 0x7f;
+        let funct3 = (fetch.instruction >> 12) & 0x07;
+        let funct7 = fetch.instruction >> 25;
+        let rd = ((fetch.instruction >> 7) & 0x01f) as usize;
+        let rs1 = ((fetch.instruction >> 15) & 0x01f) as usize;
+        let rs2 = ((fetch.instruction >> 20) & 0x01f) as usize;
+        let imm3112 = (fetch.instruction >> 12) << 12;
+        let imm110 = (fetch.instruction >> 20);
+        let shamt = (fetch.instruction >> 20) & 0x01f;
 
         match opcode {
             0x03 => match funct3 {
                 0x00 => {
-                    println!("LB x{}, {}(x{})", rd, imm110, rs1);
                     reg[rd] = mem[(reg[rs1] + imm110) as usize] as i32;
                 }
                 0x01 => {
-                    println!("LH x{}, {}(x{})", rd, imm110, rs1);
                     let index = (reg[rs1] + imm110) as usize;
                     let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
                     reg[rd] = i32::from_be_bytes(short);
                 }
                 0x02 => {
-                    println!("LW x{}, {}(x{})", rd, imm110, rs1);
                     let index = (reg[rs1] + imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
                     reg[rd] = i32::from_be_bytes(integer);
                 }
                 0x04 => {
-                    println!("LHU x{}, {}(x{})", rd, imm110, rs1);
                     let index = (reg[rs1] + imm110) as usize;
                     let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
                     reg[rd] = u32::from_be_bytes(short) as i32;
                 }
                 0x05 => {
-                    println!("LWU x{}, {}(x{})", rd, imm110, rs1);
                     let index = (reg[rs1] + imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
@@ -84,15 +84,12 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
             },
             0x13 => match funct3 {
                 0x00 => {
-                    println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
                     reg[rd] = reg[rs1] + imm110;
                 }
                 0x01 => {
-                    println!("SLLI x{}, x{}, {}", rd, rs1, shamt);
                     reg[rd] = reg[rs1] << shamt;
                 }
                 0x02 => {
-                    println!("SLTI x{}, x{}, {}", rd, rs1, imm110);
                     if reg[rs1] < imm110 {
                         reg[rd] = 1;
                     } else {
@@ -100,7 +97,6 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     }
                 }
                 0x03 => {
-                    println!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
                     if (reg[rs1] as u32) < (imm110 as u32) {
                         reg[rd] = 1;
                     } else {
@@ -108,17 +104,14 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     }
                 }
                 0x04 => {
-                    println!("XORI x{}, x{}, {}", rd, rs1, imm110);
                     reg[rd] = reg[rs1] ^ imm110;
                 }
                 // TODO:
                 0x05 => match funct7 {
                     0x00 => {
-                        println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
                         reg[rd] = ((reg[rs1] as u32) >> (shamt as u32)) as i32;
                     }
                     0x20 => {
-                        println!("SRAI x{}, x{}, {}", rd, rs1, shamt);
                         reg[rd] = reg[rs1] >> shamt;
                     }
                     unimplemented => println!(
@@ -127,11 +120,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     ),
                 },
                 0x06 => {
-                    println!("ORI x{}, x{}, {}", rd, rs1, imm110);
                     reg[rd] = reg[rs1] | imm110;
                 }
                 0x07 => {
-                    println!("ANDI x{}, x{}, {}", rd, rs1, imm110);
                     reg[rd] = reg[rs1] & imm110;
                 }
                 unimplemented => println!(
@@ -140,26 +131,22 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                 ),
             },
             0x17 => {
-                println!("AUIPC x{}, {}", rd, imm3112);
-                reg[rd] = pc as i32 + imm3112;
+                reg[rd] = fetch.pc as i32 + imm3112;
             }
             0x23 => match funct3 {
                 0x00 => {
-                    let offset = s_format(&instruction);
-                    println!("SB x{}, {}(x{})", rd, offset, rs1);
+                    let offset = s_format(&fetch.instruction);
                     let bytes = i32::to_be_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset as usize] = bytes[0];
                 }
                 0x01 => {
-                    let offset = s_format(&instruction);
-                    println!("SH x{}, {}(x{})", rd, offset, rs1);
+                    let offset = s_format(&fetch.instruction);
                     let bytes = i32::to_be_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset as usize] = bytes[0];
                     mem[reg[rs1] as usize + offset as usize + 1] = bytes[1];
                 }
                 0x02 => {
-                    let offset = s_format(&instruction);
-                    println!("SW x{}, {}(x{})", rd, offset, rs1);
+                    let offset = s_format(&fetch.instruction);
                     let bytes = i32::to_be_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset as usize] = bytes[0];
                     mem[reg[rs1] as usize + offset as usize + 1] = bytes[1];
@@ -174,11 +161,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
             0x33 => match funct3 {
                 0x00 => match funct7 {
                     0x00 => {
-                        println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
                         reg[rd] = reg[rs1] + reg[rs2];
                     }
                     0x20 => {
-                        println!("SUB x{}, x{}, x{}", rd, rs1, rs2);
                         reg[rd] = reg[rs1] - reg[rs2];
                     }
                     unimplemented => println!(
@@ -187,11 +172,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     ),
                 },
                 0x01 => {
-                    println!("SLL x{}, x{}, x{}", rd, rs1, rs2);
                     reg[rd] = reg[rs1] << reg[rs2];
                 }
                 0x02 => {
-                    println!("SLT x{}, x{}, x{}", rd, rs1, rs2);
                     if reg[rs1] < reg[rs2] {
                         reg[rd] = 1;
                     } else {
@@ -199,7 +182,6 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     }
                 }
                 0x03 => {
-                    println!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
                     if (reg[rs1] as u32) < (reg[rs2] as u32) {
                         reg[rd] = 1;
                     } else {
@@ -207,16 +189,13 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     }
                 }
                 0x04 => {
-                    println!("XOR x{}, x{}, x{}", rd, rs1, rs2);
                     reg[rd] = reg[rs1] ^ reg[rs2];
                 }
                 0x05 => match funct7 {
                     0x00 => {
-                        println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
                         reg[rd] = ((reg[rs1] as u32) >> (reg[rs2] as u32)) as i32;
                     }
                     0x20 => {
-                        println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
                         reg[rd] = reg[rs1] >> reg[rs2];
                     }
                     unimplemented => println!(
@@ -225,11 +204,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                     ),
                 },
                 0x06 => {
-                    println!("OR x{}, x{}, x{}", rd, rs1, rs2);
                     reg[rd] = reg[rs1] | reg[rs2];
                 }
                 0x07 => {
-                    println!("AND x{}, x{}, x{}", rd, rs1, rs2);
                     reg[rd] = reg[rs1] & reg[rs2];
                 }
                 unimplemented => println!(
@@ -238,49 +215,42 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                 ),
             },
             0x37 => {
-                println!("LUI x{}, {}", rd, imm3112);
                 reg[rd] = imm3112;
             }
             0x63 => match funct3 {
                 0x00 => {
-                    println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if reg[rs1] == reg[rs2] {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x01 => {
-                    println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if reg[rs1] != reg[rs2] {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x04 => {
-                    println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if reg[rs1] < reg[rs2] {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x05 => {
-                    println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if reg[rs1] >= reg[rs2] {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x06 => {
-                    println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if (reg[rs1] as u32) < (reg[rs2] as u32) {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x07 => {
-                    println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction) * 4);
                     if (reg[rs1] as u32) >= (reg[rs2] as u32) {
-                        pc += (sb_format(&instruction) * 4) as usize;
+                        fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
@@ -291,9 +261,8 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
             },
             0x67 => match funct3 {
                 0x00 => {
-                    println!("JALR x{}, x{}, {}", rd, rs1, imm110);
-                    reg[rd] = pc as i32 + next_index;
-                    pc = (reg[rs1] + imm110 * 4) as usize;
+                    reg[rd] = fetch.pc as i32 + 4;
+                    fetch.pc = (reg[rs1] + imm110) as usize;
                     branch = true;
                 }
                 unimplemented => println!(
@@ -302,13 +271,11 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
                 ),
             },
             0x6F => {
-                println!("JAL x{}, {}", rd, uj_format(&instruction));
-                reg[rd] = (pc + next_index as usize) as i32;
-                pc = pc + (uj_format(&instruction) * 4) as usize;
+                reg[rd] = (fetch.pc + 4) as i32;
+                fetch.pc = fetch.pc + uj_format(&fetch.instruction) as usize;
                 branch = true;
             }
             0x73 => {
-                println!("ECALL");
                 if reg[17] == 10 {
                     break;
                 }
@@ -320,15 +287,26 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
 
         //print_registers_not_zero(&reg);
 
-        if !branch {
-            pc += next_index as usize;
-        } else {
-            branch = false;
-        }
-
-        if (pc >> 2) >= *program_len {
+        if fetch.pc >= *program_len {
             break;
         }
+
+        if stepwise {
+            let mut s = String::new();
+            io::stdin().read_line(&mut s).expect("Did not read");
+        }
+
+        fetch.print_state();
+        print!("Instruction: ");
+        decode(&fetch.instruction);
+        println!();
+        if !branch {
+            fetch.update(4);
+        } else {
+            fetch.update(0);
+        }
+
+        print_registers_not_zero(&reg);
     }
 
     println!("Program exit");
@@ -364,8 +342,8 @@ fn uj_format(instruction: &i32) -> i32 {
 fn sb_format(instruction: &i32) -> i32 {
     let bit11 = (instruction & 0x80) << 4; // 11
     let bit12 = (instruction >> 31) << 12; // 12
-    let bit41 =  ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
-    let bit105 =  ((instruction >> 25) & 0x3f) << 5; // 10 9 8 7 6 5
+    let bit41 = ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
+    let bit105 = ((instruction >> 25) & 0x3f) << 5; // 10 9 8 7 6 5
     ((bit41 | bit105) | bit11) | bit12
 }
 
@@ -422,216 +400,191 @@ fn print_registers_not_zero(registers: &[i32; 32]) {
     println!("___")
 }
 
-fn decode(mem: &[u8; 1048576], program_len: &usize) {
-    println!("Converting binary to assembly");
+fn decode(instruction: &i32) {
 
-    let mut pc: usize = 0;
+    let opcode = instruction & 0x7f;
+    let funct3 = (instruction >> 12) & 0x07;
+    let funct7 = instruction >> 25;
+    let rd = (instruction >> 7) & 0x01f;
+    let rs1 = (instruction >> 15) & 0x01f;
+    let rs2 = (instruction >> 20) & 0x01f;
+    let imm3112 = (instruction >> 12) << 12;
+    let imm110 = (instruction >> 20);
+    let shamt = (instruction >> 20) & 0x01f;
 
-    let next_index = 16;
-
-    let mut branch: bool = false;
-
-    loop {
-        let instruction = convert_to_instruction(&mem[(pc >> 2)..((pc >> 2) + 4)]);
-        let opcode = instruction & 0x7f;
-        let funct3 = (instruction >> 12) & 0x07;
-        let funct7 = instruction >> 25;
-        let rd = (instruction >> 7) & 0x01f;
-        let rs1 = (instruction >> 15) & 0x01f;
-        let rs2 = (instruction >> 20) & 0x01f;
-        let imm3112 = (instruction >> 12) << 12;
-        let imm110 = (instruction >> 20);
-        let shamt = (instruction >> 20) & 0x01f;
-
-        match opcode {
-            0x03 => match funct3 {
-                0x00 => {
-                    println!("LB x{}, {}(x{})", rd, imm110, rs1);
-                }
-                0x01 => {
-                    println!("LH x{}, {}(x{})", rd, imm110, rs1);
-                }
-                0x02 => {
-                    println!("LW x{}, {}(x{})", rd, imm110, rs1);
-                }
-                0x04 => {
-                    println!("LHU x{}, {}(x{})", rd, imm110, rs1);
-                }
-                0x05 => {
-                    println!("LWU x{}, {}(x{})", rd, imm110, rs1);
-                }
-                unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                ),
-            },
-            0x13 => match funct3 {
-                0x00 => {
-                    println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
-                }
-                0x01 => {
-                    println!("SLLI x{}, x{}, {}", rd, rs1, shamt);
-                }
-                0x02 => {
-                    println!("SLTI x{}, x{}, {}", rd, rs1, imm110);
-                }
-                0x03 => {
-                    println!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
-                }
-                0x04 => {
-                    println!("XORI x{}, x{}, {}", rd, rs1, imm110);
-                }
-                // TODO:
-                0x05 => match funct7 {
-                    0x00 => {
-                        println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
-                    }
-                    0x20 => {
-                        println!("SRAI x{}, x{}, {}", rd, rs1, shamt);
-                    }
-                    unimplemented => println!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    ),
-                },
-                0x06 => {
-                    println!("ORI x{}, x{}, {}", rd, rs1, imm110);
-                }
-                0x07 => {
-                    println!("ANDI x{}, x{}, {}", rd, rs1, imm110);
-                }
-                unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                ),
-            },
-            0x17 => {
-                println!("AUIPC x{}, {}", rd, imm3112);
+    match opcode {
+        0x03 => match funct3 {
+            0x00 => {
+                println!("LB x{}, {}(x{})", rd, imm110, rs1);
             }
-            0x23 => match funct3 {
-                0x00 => {
-                    let offset = s_format(&instruction);
-                    println!("SB x{}, {}(x{})", rd, offset, rs1);
-                }
-                0x01 => {
-                    let offset = s_format(&instruction);
-                    println!("SH x{}, {}(x{})", rd, offset, rs1);
-                }
-                0x02 => {
-                    let offset = s_format(&instruction);
-                    println!("SW x{}, {}(x{})", rd, offset, rs1);
-                }
-                unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                ),
-            },
-            0x33 => match funct3 {
-                0x00 => match funct7 {
-                    0x00 => {
-                        println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
-                    }
-                    0x20 => {
-                        println!("SUB x{}, x{}, x{}", rd, rs1, rs2);
-                    }
-                    unimplemented => println!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    ),
-                },
-                0x01 => {
-                    println!("SLL x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x02 => {
-                    println!("SLT x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x03 => {
-                    println!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x04 => {
-                    println!("XOR x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x05 => match funct7 {
-                    0x00 => {
-                        println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
-                    }
-                    0x20 => {
-                        println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
-                    }
-                    unimplemented => println!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    ),
-                },
-                0x06 => {
-                    println!("OR x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x07 => {
-                    println!("AND x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                ),
-            },
-            0x37 => {
-                println!("LUI x{}, {}", rd, imm3112);
+            0x01 => {
+                println!("LH x{}, {}(x{})", rd, imm110, rs1);
             }
-            0x63 => match funct3 {
+            0x02 => {
+                println!("LW x{}, {}(x{})", rd, imm110, rs1);
+            }
+            0x04 => {
+                println!("LHU x{}, {}(x{})", rd, imm110, rs1);
+            }
+            0x05 => {
+                println!("LWU x{}, {}(x{})", rd, imm110, rs1);
+            }
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x13 => match funct3 {
+            0x00 => {
+                println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
+            }
+            0x01 => {
+                println!("SLLI x{}, x{}, {}", rd, rs1, shamt);
+            }
+            0x02 => {
+                println!("SLTI x{}, x{}, {}", rd, rs1, imm110);
+            }
+            0x03 => {
+                println!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
+            }
+            0x04 => {
+                println!("XORI x{}, x{}, {}", rd, rs1, imm110);
+            }
+            // TODO:
+            0x05 => match funct7 {
                 0x00 => {
-                    println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                    println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
                 }
-                0x01 => {
-                    println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-                }
-                0x04 => {
-                    println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-                }
-                0x05 => {
-                    println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-                }
-                0x06 => {
-                    println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-                }
-                0x07 => {
-                    println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                0x20 => {
+                    println!("SRAI x{}, x{}, {}", rd, rs1, shamt);
                 }
                 unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, funct3, opcode
                 ),
             },
-            0x67 => match funct3 {
-                0x00 => {
-                    println!("JALR x{}, x{}, {}", rd, rs1, imm110);
-                }
-                unimplemented => println!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                ),
-            },
-            0x6F => {
-                println!("JAL x{}, {}", rd, uj_format(&instruction));
+            0x06 => {
+                println!("ORI x{}, x{}, {}", rd, rs1, imm110);
             }
-            0x73 => {
-                println!("ECALL");
+            0x07 => {
+                println!("ANDI x{}, x{}, {}", rd, rs1, imm110);
             }
-            unimplemented => println!("Opcode {:#02x} not implemented...", unimplemented),
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x17 => {
+            println!("AUIPC x{}, {}", rd, imm3112);
         }
-
-        //print_registers_not_zero(&reg);
-
-        if !branch {
-            pc += next_index as usize;
-        } else {
-            branch = false;
+        0x23 => match funct3 {
+            0x00 => {
+                let offset = s_format(&instruction);
+                println!("SB x{}, {}(x{})", rd, offset, rs1);
+            }
+            0x01 => {
+                let offset = s_format(&instruction);
+                println!("SH x{}, {}(x{})", rd, offset, rs1);
+            }
+            0x02 => {
+                let offset = s_format(&instruction);
+                println!("SW x{}, {}(x{})", rd, offset, rs1);
+            }
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x33 => match funct3 {
+            0x00 => match funct7 {
+                0x00 => {
+                    println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x20 => {
+                    println!("SUB x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                unimplemented => println!(
+                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, funct3, opcode
+                ),
+            },
+            0x01 => {
+                println!("SLL x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            0x02 => {
+                println!("SLT x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            0x03 => {
+                println!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            0x04 => {
+                println!("XOR x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            0x05 => match funct7 {
+                0x00 => {
+                    println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                0x20 => {
+                    println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
+                }
+                unimplemented => println!(
+                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, funct3, opcode
+                ),
+            },
+            0x06 => {
+                println!("OR x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            0x07 => {
+                println!("AND x{}, x{}, x{}", rd, rs1, rs2);
+            }
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x37 => {
+            println!("LUI x{}, {}", rd, imm3112);
         }
-
-        if (pc >> 2) >= *program_len {
-            break;
+        0x63 => match funct3 {
+            0x00 => {
+                println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            0x01 => {
+                println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            0x04 => {
+                println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            0x05 => {
+                println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            0x06 => {
+                println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            0x07 => {
+                println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+            }
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x67 => match funct3 {
+            0x00 => {
+                println!("JALR x{}, x{}, {}", rd, rs1, imm110);
+            }
+            unimplemented => println!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
+        },
+        0x6F => {
+            println!("JAL x{}, {}", rd, uj_format(&instruction));
         }
+        0x73 => {
+            println!("ECALL");
+        }
+        unimplemented => println!("Opcode {:#02x} not implemented...", unimplemented),
     }
-
-    println!("Converted to assembly");
-
 }
