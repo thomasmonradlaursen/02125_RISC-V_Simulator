@@ -15,8 +15,9 @@ impl Fetch {
         self.next_instruction = self.instruction;
     }
 
-    pub fn print_state(&self) {
+    pub fn print_state(&self, instruction_string: &String) {
         println!("FETCH STAGE");
-        println!("PC: {}", self.pc);
+        println!("Program counter: {}", self.pc);
+        println!("Instruction: {}", instruction_string);
     }
 }

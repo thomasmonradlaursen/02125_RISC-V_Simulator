@@ -1,5 +1,6 @@
-use mylib::fetch;
+use mylib::decode::Decode;
 use mylib::fetch::Fetch;
+use mylib::printer;
 use std::env;
 use std::fs;
 use std::io;
@@ -13,9 +14,7 @@ fn main() {
     let mut mem: [u8; 1048576] = [0; 1048576];
     let len = read_bytes_to_mem(filename, &mut mem);
 
-    print_mem_instructions(&mem, &len);
-
-    print_instructions(&mem, &len);
+    //print_mem_instructions(&mem, &len);
     //print_instructions(&instructions);
 
     let res = simulate(reg, mem, &len);
@@ -34,244 +33,260 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         next_instruction: 0,
     };
 
+    let mut decode = Decode {
+        instruction: 0,
+        next_instruction: 0,
+        opcode: 0,
+        funct3: 0,
+        funct7: 0,
+        rd: 0,
+        rs1: 0,
+        rs2: 0,
+        imm3112: 0,
+        imm110: 0,
+        shamt: 0,
+        next_opcode: 0,
+        next_funct3: 0,
+        next_funct7: 0,
+        next_rd: 0,
+        next_rs1: 0,
+        next_rs2: 0,
+        next_imm3112: 0,
+        next_imm110: 0,
+        next_shamt: 0,
+    };
+
     let stepwise = true;
 
     let mut branch: bool = false;
 
     loop {
         fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
-        let opcode = fetch.instruction & 0x7f;
-        let funct3 = (fetch.instruction >> 12) & 0x07;
-        let funct7 = fetch.instruction >> 25;
-        let rd = ((fetch.instruction >> 7) & 0x01f) as usize;
-        let rs1 = ((fetch.instruction >> 15) & 0x01f) as usize;
-        let rs2 = ((fetch.instruction >> 20) & 0x01f) as usize;
-        let imm3112 = (fetch.instruction >> 12) << 12;
-        let imm110 = (fetch.instruction >> 20);
-        let shamt = (fetch.instruction >> 20) & 0x01f;
+        decode.instruction = fetch.next_instruction;
+        decode.decode_instruction();
 
-        match opcode {
-            0x03 => match funct3 {
+        match decode.opcode {
+            0x03 => match decode.funct3 {
                 0x00 => {
-                    reg[rd] = mem[(reg[rs1] + imm110) as usize] as i32;
+                    reg[decode.rd] = mem[(reg[decode.rs1] + decode.imm110) as usize] as i32;
                 }
                 0x01 => {
-                    let index = (reg[rs1] + imm110) as usize;
+                    let index = (reg[decode.rs1] + decode.imm110) as usize;
                     let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
-                    reg[rd] = i32::from_be_bytes(short);
+                    reg[decode.rd] = i32::from_be_bytes(short);
                 }
                 0x02 => {
-                    let index = (reg[rs1] + imm110) as usize;
+                    let index = (reg[decode.rs1] + decode.imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
-                    reg[rd] = i32::from_be_bytes(integer);
+                    reg[decode.rd] = i32::from_be_bytes(integer);
                 }
                 0x04 => {
-                    let index = (reg[rs1] + imm110) as usize;
+                    let index = (reg[decode.rs1] + decode.imm110) as usize;
                     let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
-                    reg[rd] = u32::from_be_bytes(short) as i32;
+                    reg[decode.rd] = u32::from_be_bytes(short) as i32;
                 }
                 0x05 => {
-                    let index = (reg[rs1] + imm110) as usize;
+                    let index = (reg[decode.rs1] + decode.imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
-                    reg[rd] = u32::from_be_bytes(integer) as i32;
+                    reg[decode.rd] = u32::from_be_bytes(integer) as i32;
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
-            0x13 => match funct3 {
+            0x13 => match decode.funct3 {
                 0x00 => {
-                    reg[rd] = reg[rs1] + imm110;
+                    reg[decode.rd] = reg[decode.rs1] + decode.imm110;
                 }
                 0x01 => {
-                    reg[rd] = reg[rs1] << shamt;
+                    reg[decode.rd] = reg[decode.rs1] << decode.shamt;
                 }
                 0x02 => {
-                    if reg[rs1] < imm110 {
-                        reg[rd] = 1;
+                    if reg[decode.rs1] < decode.imm110 {
+                        reg[decode.rd] = 1;
                     } else {
-                        reg[rd] = 0;
+                        reg[decode.rd] = 0;
                     }
                 }
                 0x03 => {
-                    if (reg[rs1] as u32) < (imm110 as u32) {
-                        reg[rd] = 1;
+                    if (reg[decode.rs1] as u32) < (decode.imm110 as u32) {
+                        reg[decode.rd] = 1;
                     } else {
-                        reg[rd] = 0;
+                        reg[decode.rd] = 0;
                     }
                 }
                 0x04 => {
-                    reg[rd] = reg[rs1] ^ imm110;
+                    reg[decode.rd] = reg[decode.rs1] ^ decode.imm110;
                 }
                 // TODO:
-                0x05 => match funct7 {
+                0x05 => match decode.funct7 {
                     0x00 => {
-                        reg[rd] = ((reg[rs1] as u32) >> (shamt as u32)) as i32;
+                        reg[decode.rd] = ((reg[decode.rs1] as u32) >> (decode.shamt as u32)) as i32;
                     }
                     0x20 => {
-                        reg[rd] = reg[rs1] >> shamt;
+                        reg[decode.rd] = reg[decode.rs1] >> decode.shamt;
                     }
                     unimplemented => println!(
                         "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
+                        unimplemented, decode.funct3, decode.opcode
                     ),
                 },
                 0x06 => {
-                    reg[rd] = reg[rs1] | imm110;
+                    reg[decode.rd] = reg[decode.rs1] | decode.imm110;
                 }
                 0x07 => {
-                    reg[rd] = reg[rs1] & imm110;
+                    reg[decode.rd] = reg[decode.rs1] & decode.imm110;
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
             0x17 => {
-                reg[rd] = fetch.pc as i32 + imm3112;
+                reg[decode.rd] = fetch.pc as i32 + decode.imm3112;
             }
-            0x23 => match funct3 {
+            0x23 => match decode.funct3 {
                 0x00 => {
                     let offset = s_format(&fetch.instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
-                    mem[reg[rs1] as usize + offset as usize] = bytes[0];
+                    let bytes = i32::to_be_bytes(reg[decode.rs2]);
+                    mem[reg[decode.rs1] as usize + offset as usize] = bytes[0];
                 }
                 0x01 => {
                     let offset = s_format(&fetch.instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
-                    mem[reg[rs1] as usize + offset as usize] = bytes[0];
-                    mem[reg[rs1] as usize + offset as usize + 1] = bytes[1];
+                    let bytes = i32::to_be_bytes(reg[decode.rs2]);
+                    mem[reg[decode.rs1] as usize + offset as usize] = bytes[0];
+                    mem[reg[decode.rs1] as usize + offset as usize + 1] = bytes[1];
                 }
                 0x02 => {
                     let offset = s_format(&fetch.instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
-                    mem[reg[rs1] as usize + offset as usize] = bytes[0];
-                    mem[reg[rs1] as usize + offset as usize + 1] = bytes[1];
-                    mem[reg[rs1] as usize + offset as usize + 2] = bytes[2];
-                    mem[reg[rs1] as usize + offset as usize + 3] = bytes[3];
+                    let bytes = i32::to_be_bytes(reg[decode.rs2]);
+                    mem[reg[decode.rs1] as usize + offset as usize] = bytes[0];
+                    mem[reg[decode.rs1] as usize + offset as usize + 1] = bytes[1];
+                    mem[reg[decode.rs1] as usize + offset as usize + 2] = bytes[2];
+                    mem[reg[decode.rs1] as usize + offset as usize + 3] = bytes[3];
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
-            0x33 => match funct3 {
-                0x00 => match funct7 {
+            0x33 => match decode.funct3 {
+                0x00 => match decode.funct7 {
                     0x00 => {
-                        reg[rd] = reg[rs1] + reg[rs2];
+                        reg[decode.rd] = reg[decode.rs1] + reg[decode.rs2];
                     }
                     0x20 => {
-                        reg[rd] = reg[rs1] - reg[rs2];
+                        reg[decode.rd] = reg[decode.rs1] - reg[decode.rs2];
                     }
                     unimplemented => println!(
                         "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
+                        unimplemented, decode.funct3, decode.opcode
                     ),
                 },
                 0x01 => {
-                    reg[rd] = reg[rs1] << reg[rs2];
+                    reg[decode.rd] = reg[decode.rs1] << reg[decode.rs2];
                 }
                 0x02 => {
-                    if reg[rs1] < reg[rs2] {
-                        reg[rd] = 1;
+                    if reg[decode.rs1] < reg[decode.rs2] {
+                        reg[decode.rd] = 1;
                     } else {
-                        reg[rd] = 0;
+                        reg[decode.rd] = 0;
                     }
                 }
                 0x03 => {
-                    if (reg[rs1] as u32) < (reg[rs2] as u32) {
-                        reg[rd] = 1;
+                    if (reg[decode.rs1] as u32) < (reg[decode.rs2] as u32) {
+                        reg[decode.rd] = 1;
                     } else {
-                        reg[rd] = 0;
+                        reg[decode.rd] = 0;
                     }
                 }
                 0x04 => {
-                    reg[rd] = reg[rs1] ^ reg[rs2];
+                    reg[decode.rd] = reg[decode.rs1] ^ reg[decode.rs2];
                 }
-                0x05 => match funct7 {
+                0x05 => match decode.funct7 {
                     0x00 => {
-                        reg[rd] = ((reg[rs1] as u32) >> (reg[rs2] as u32)) as i32;
+                        reg[decode.rd] = ((reg[decode.rs1] as u32) >> (reg[decode.rs2] as u32)) as i32;
                     }
                     0x20 => {
-                        reg[rd] = reg[rs1] >> reg[rs2];
+                        reg[decode.rd] = reg[decode.rs1] >> reg[decode.rs2];
                     }
                     unimplemented => println!(
                         "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
+                        unimplemented, decode.funct3, decode.opcode
                     ),
                 },
                 0x06 => {
-                    reg[rd] = reg[rs1] | reg[rs2];
+                    reg[decode.rd] = reg[decode.rs1] | reg[decode.rs2];
                 }
                 0x07 => {
-                    reg[rd] = reg[rs1] & reg[rs2];
+                    reg[decode.rd] = reg[decode.rs1] & reg[decode.rs2];
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
             0x37 => {
-                reg[rd] = imm3112;
+                reg[decode.rd] = decode.imm3112;
             }
-            0x63 => match funct3 {
+            0x63 => match decode.funct3 {
                 0x00 => {
-                    if reg[rs1] == reg[rs2] {
+                    if reg[decode.rs1] == reg[decode.rs2] {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x01 => {
-                    if reg[rs1] != reg[rs2] {
+                    if reg[decode.rs1] != reg[decode.rs2] {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x04 => {
-                    if reg[rs1] < reg[rs2] {
+                    if reg[decode.rs1] < reg[decode.rs2] {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x05 => {
-                    if reg[rs1] >= reg[rs2] {
+                    if reg[decode.rs1] >= reg[decode.rs2] {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x06 => {
-                    if (reg[rs1] as u32) < (reg[rs2] as u32) {
+                    if (reg[decode.rs1] as u32) < (reg[decode.rs2] as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 0x07 => {
-                    if (reg[rs1] as u32) >= (reg[rs2] as u32) {
+                    if (reg[decode.rs1] as u32) >= (reg[decode.rs2] as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
                     };
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
-            0x67 => match funct3 {
+            0x67 => match decode.funct3 {
                 0x00 => {
-                    reg[rd] = fetch.pc as i32 + 4;
-                    fetch.pc = (reg[rs1] + imm110) as usize;
+                    reg[decode.rd] = fetch.pc as i32 + 4;
+                    fetch.pc = (reg[decode.rs1] + decode.imm110) as usize;
                     branch = true;
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
+                    unimplemented, decode.opcode
                 ),
             },
             0x6F => {
-                reg[rd] = (fetch.pc + 4) as i32;
+                reg[decode.rd] = (fetch.pc + 4) as i32;
                 fetch.pc = fetch.pc + uj_format(&fetch.instruction) as usize;
                 branch = true;
             }
@@ -296,15 +311,17 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
             io::stdin().read_line(&mut s).expect("Did not read");
         }
 
-        fetch.print_state();
-        print!("Instruction: ");
-        decode(&fetch.instruction);
-        println!();
+        fetch.print_state(&printer::to_assembly(&fetch.instruction));
+        decode.print_state(&printer::to_assembly(&decode.instruction));
+        
+        
         if !branch {
             fetch.update(4);
         } else {
             fetch.update(0);
         }
+
+        decode.update();
 
         print_registers_not_zero(&reg);
     }
@@ -323,12 +340,6 @@ fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
     }
     println!("Bytes have been loaded to memory");
     content.len()
-}
-
-fn convert_to_instruction(bytes: &[u8]) -> i32 {
-    let instruction: [u8; 4] = [bytes[3], bytes[2], bytes[1], bytes[0]];
-    let next = i32::from_be_bytes(instruction);
-    next
 }
 
 fn uj_format(instruction: &i32) -> i32 {
@@ -364,14 +375,6 @@ fn print_mem_instructions(mem: &[u8], len: &usize) {
     }
 }
 
-fn print_instructions(mem: &[u8], len: &usize) {
-    let mut count = 0;
-    while count < *len {
-        println!("{:032b}", convert_to_instruction(&mem[count..count + 4]));
-        count = count + 4;
-    }
-}
-
 fn print_registers(registers: &[i32; 32]) {
     let mut count = 0;
     for register in registers {
@@ -398,193 +401,4 @@ fn print_registers_not_zero(registers: &[i32; 32]) {
         count += 1;
     }
     println!("___")
-}
-
-fn decode(instruction: &i32) {
-
-    let opcode = instruction & 0x7f;
-    let funct3 = (instruction >> 12) & 0x07;
-    let funct7 = instruction >> 25;
-    let rd = (instruction >> 7) & 0x01f;
-    let rs1 = (instruction >> 15) & 0x01f;
-    let rs2 = (instruction >> 20) & 0x01f;
-    let imm3112 = (instruction >> 12) << 12;
-    let imm110 = (instruction >> 20);
-    let shamt = (instruction >> 20) & 0x01f;
-
-    match opcode {
-        0x03 => match funct3 {
-            0x00 => {
-                println!("LB x{}, {}(x{})", rd, imm110, rs1);
-            }
-            0x01 => {
-                println!("LH x{}, {}(x{})", rd, imm110, rs1);
-            }
-            0x02 => {
-                println!("LW x{}, {}(x{})", rd, imm110, rs1);
-            }
-            0x04 => {
-                println!("LHU x{}, {}(x{})", rd, imm110, rs1);
-            }
-            0x05 => {
-                println!("LWU x{}, {}(x{})", rd, imm110, rs1);
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x13 => match funct3 {
-            0x00 => {
-                println!("ADDI x{}, x{}, {}", rd, rs1, imm110);
-            }
-            0x01 => {
-                println!("SLLI x{}, x{}, {}", rd, rs1, shamt);
-            }
-            0x02 => {
-                println!("SLTI x{}, x{}, {}", rd, rs1, imm110);
-            }
-            0x03 => {
-                println!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
-            }
-            0x04 => {
-                println!("XORI x{}, x{}, {}", rd, rs1, imm110);
-            }
-            // TODO:
-            0x05 => match funct7 {
-                0x00 => {
-                    println!("SRLI x{}, x{}, {}", rd, rs1, shamt);
-                }
-                0x20 => {
-                    println!("SRAI x{}, x{}, {}", rd, rs1, shamt);
-                }
-                unimplemented => println!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
-            },
-            0x06 => {
-                println!("ORI x{}, x{}, {}", rd, rs1, imm110);
-            }
-            0x07 => {
-                println!("ANDI x{}, x{}, {}", rd, rs1, imm110);
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x17 => {
-            println!("AUIPC x{}, {}", rd, imm3112);
-        }
-        0x23 => match funct3 {
-            0x00 => {
-                let offset = s_format(&instruction);
-                println!("SB x{}, {}(x{})", rd, offset, rs1);
-            }
-            0x01 => {
-                let offset = s_format(&instruction);
-                println!("SH x{}, {}(x{})", rd, offset, rs1);
-            }
-            0x02 => {
-                let offset = s_format(&instruction);
-                println!("SW x{}, {}(x{})", rd, offset, rs1);
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x33 => match funct3 {
-            0x00 => match funct7 {
-                0x00 => {
-                    println!("ADD x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x20 => {
-                    println!("SUB x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                unimplemented => println!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
-            },
-            0x01 => {
-                println!("SLL x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            0x02 => {
-                println!("SLT x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            0x03 => {
-                println!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            0x04 => {
-                println!("XOR x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            0x05 => match funct7 {
-                0x00 => {
-                    println!("SRL x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                0x20 => {
-                    println!("SRA x{}, x{}, x{}", rd, rs1, rs2);
-                }
-                unimplemented => println!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
-            },
-            0x06 => {
-                println!("OR x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            0x07 => {
-                println!("AND x{}, x{}, x{}", rd, rs1, rs2);
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x37 => {
-            println!("LUI x{}, {}", rd, imm3112);
-        }
-        0x63 => match funct3 {
-            0x00 => {
-                println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            0x01 => {
-                println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            0x04 => {
-                println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            0x05 => {
-                println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            0x06 => {
-                println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            0x07 => {
-                println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x67 => match funct3 {
-            0x00 => {
-                println!("JALR x{}, x{}, {}", rd, rs1, imm110);
-            }
-            unimplemented => println!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        },
-        0x6F => {
-            println!("JAL x{}, {}", rd, uj_format(&instruction));
-        }
-        0x73 => {
-            println!("ECALL");
-        }
-        unimplemented => println!("Opcode {:#02x} not implemented...", unimplemented),
-    }
 }
