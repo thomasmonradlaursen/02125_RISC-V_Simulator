@@ -10,4 +10,4 @@ Cargo.lock
 **/*.rs.bk
 
 # Mac files to not be included
-**/.DS_Store
+**/*.DS_Store
