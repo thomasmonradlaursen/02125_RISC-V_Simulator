@@ -1,15 +1,15 @@
 use crate::decode::Decode;
 
 pub struct Execute {
-    instruction: i32,
-    next_instruction: i32,
-    result: i32,
-    mem_address: usize,
-    destination: usize,
+    pub instruction: i32,
+    pub next_instruction: i32,
+    pub result: i32,
+    pub mem_address: usize,
+    pub destination: usize,
 }
 
 impl Execute {
-    fn execute_instruction(&mut self, decode: Decode) {
+    pub fn execute_instruction(&mut self, decode: &Decode) {
         self.destination = decode.next_rd;
         match decode.next_opcode {
             0x03 => match decode.next_funct3 {
@@ -102,7 +102,7 @@ impl Execute {
             0x23 => match decode.next_funct3 {
                 0x00 => {
                     self.mem_address = decode.next_rs1 as usize + decode.next_s_offset as usize;
-                    todo!();
+                    // TODO
                     /* let offset = decode.next_s_offset;
                     let bytes = i32::to_be_bytes(decode.next_rs2);
                     mem[decode.next_rs1 as usize + offset as usize] = bytes[0]; */
@@ -182,7 +182,7 @@ impl Execute {
             },
             0x37 => {
                 // AUIPC
-                todo!();
+                // TODO
                 //reg[rd] = decode.next_imm3112;
             }
             0x63 => match decode.next_funct3 {
@@ -240,18 +240,27 @@ impl Execute {
                 _ => (),
             },
             0x6F => {
-                todo!();
+                // TODO
                 /*reg[rd] = (fetch.pc + 4) as i32;
                 fetch.pc = fetch.pc + uj_format(&fetch.instruction) as usize;
                 branch = true;*/
             }
             0x73 => {
-                todo!();
+                // TODO
                 /*if reg[17] == 10 {
                     break;
                 }*/
             }
             _ => (),
         }
+    }
+
+    pub fn update(&mut self) {
+        self.next_instruction = self.instruction;
+    }
+
+    pub fn print_state(&self, instruction_string: &String) {
+        println!("EXECUTE STAGE");
+        println!("Instruction: {}", instruction_string);
     }
 }
