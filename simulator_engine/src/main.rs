@@ -1,5 +1,6 @@
 use mylib::decode::Decode;
 use mylib::fetch::Fetch;
+use mylib::execute::Execute;
 use mylib::printer;
 use std::env;
 use std::fs;
@@ -45,6 +46,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         imm3112: 0,
         imm110: 0,
         shamt: 0,
+        s_offset: 0,
+        sb_offset: 0,
+        uj_offset: 0,
         next_opcode: 0,
         next_funct3: 0,
         next_funct7: 0,
@@ -54,6 +58,9 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         next_imm3112: 0,
         next_imm110: 0,
         next_shamt: 0,
+        next_s_offset: 0,
+        next_sb_offset: 0,
+        next_uj_offset: 0,
     };
 
     let stepwise = true;
@@ -63,7 +70,7 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
     loop {
         fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
         decode.instruction = fetch.next_instruction;
-        decode.decode_instruction();
+        decode.decode_instruction(&reg);
 
         match decode.opcode {
             0x03 => match decode.funct3 {

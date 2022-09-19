@@ -8,7 +8,7 @@ pub fn to_assembly(instruction: &i32) -> String {
     let rs1 = (instruction >> 15) & 0x01f;
     let rs2 = (instruction >> 20) & 0x01f;
     let imm3112 = (instruction >> 12) << 12;
-    let imm110 = (instruction >> 20);
+    let imm110 = instruction >> 20;
     let shamt = (instruction >> 20) & 0x01f;
 
     match opcode {
