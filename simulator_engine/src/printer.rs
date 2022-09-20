@@ -212,3 +212,42 @@ fn s_format(instruction: &i32) -> i32 {
     let bit115 = (instruction >> 25) << 5;
     bit40 | bit115
 }
+
+pub fn print_mem_instructions(mem: &[u8], len: &usize) {
+    let mut count = 0;
+    while count < *len {
+        print!("{:08b} ", mem[count]);
+        count = count + 1;
+        if count % 4 == 0 {
+            println!();
+        }
+    }
+}
+
+pub fn print_registers(registers: &[i32; 32]) {
+    let mut count = 0;
+    for register in registers {
+        println!("Reg[{:>2}]: {:>10}", count, register);
+        count += 1;
+    }
+}
+
+pub fn print_registers_as_char(registers: &[i32; 32]) {
+    let mut count = 0;
+    for register in registers {
+        println!("Reg[{:>2}]: {:?}", count, (*register as u8) as char);
+        count += 1;
+    }
+}
+
+pub fn print_registers_not_zero(registers: &[i32; 32]) {
+    let mut count = 0;
+    let zero = 0;
+    for register in registers {
+        if *register != zero {
+            println!("Reg[{:>2}]: {:>5}", count, register);
+        }
+        count += 1;
+    }
+    println!("___")
+}

@@ -1,6 +1,8 @@
 use mylib::decode::Decode;
 use mylib::fetch::Fetch;
 use mylib::execute::Execute;
+use mylib::mem_access::MemoryAccess;
+use mylib::writeback::Writeback;
 use mylib::printer;
 use std::env;
 use std::fs;
@@ -20,7 +22,7 @@ fn main() {
 
     let res = simulate(reg, mem, &len);
 
-    print_registers(&res);
+    printer::print_registers(&res);
 
     //print_registers_as_char(&res);
 }
@@ -69,6 +71,29 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         result: 0,
         mem_address: 0,
         destination: 0,
+        mem_opcode: 0,
+        mem_funct3: 0,
+        next_result: 0,
+        next_mem_address: 0,
+        next_destination: 0,
+        next_mem_opcode: 0,
+        next_mem_funct3: 0,
+    };
+
+    let mut mem_access = MemoryAccess {
+        instruction: 0,
+        next_instruction: 0,
+        loaded_memory: 0,
+        next_loaded_memory: 0,
+        destination: 0,
+        next_destination: 0,
+        content: 0,
+        next_content: 0,
+    };
+
+    let mut writeback = Writeback {
+        instruction: 0,
+        next_instruction: 0,
     };
 
     let stepwise = true;
@@ -81,6 +106,10 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         decode.decode_instruction(&reg);
         execute.instruction = decode.next_instruction;
         execute.execute_instruction(&decode);
+        mem_access.instruction = execute.next_instruction;
+        mem_access.access_memory(&mut mem, &execute.next_mem_address, &execute.next_result, &execute.next_mem_opcode, &execute.next_mem_funct3, &execute.next_destination);
+        writeback.instruction = mem_access.next_instruction;
+        writeback.writeback(&mem_access.next_destination, &mem_access.next_content, &mut reg);
 
         reg[0] = 0;
 
@@ -98,6 +127,8 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         fetch.print_state(&printer::to_assembly(&fetch.instruction));
         decode.print_state(&printer::to_assembly(&decode.instruction));
         execute.print_state(&printer::to_assembly(&execute.instruction));
+        mem_access.print_state(&printer::to_assembly(&mem_access.instruction));
+        writeback.print_state(&printer::to_assembly(&writeback.instruction));
         
         if !branch {
             fetch.update(4);
@@ -107,8 +138,10 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
 
         decode.update();
         execute.update();
+        mem_access.update();
+        writeback.update();
 
-        print_registers_not_zero(&reg);
+        printer::print_registers_not_zero(&reg);
     }
 
     println!("Program exit");
@@ -133,43 +166,4 @@ fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
     }
     println!("Bytes have been loaded to memory");
     content.len()
-}
-
-fn print_mem_instructions(mem: &[u8], len: &usize) {
-    let mut count = 0;
-    while count < *len {
-        print!("{:08b} ", mem[count]);
-        count = count + 1;
-        if count % 4 == 0 {
-            println!();
-        }
-    }
-}
-
-fn print_registers(registers: &[i32; 32]) {
-    let mut count = 0;
-    for register in registers {
-        println!("Reg[{:>2}]: {:>10}", count, register);
-        count += 1;
-    }
-}
-
-fn print_registers_as_char(registers: &[i32; 32]) {
-    let mut count = 0;
-    for register in registers {
-        println!("Reg[{:>2}]: {:?}", count, (*register as u8) as char);
-        count += 1;
-    }
-}
-
-fn print_registers_not_zero(registers: &[i32; 32]) {
-    let mut count = 0;
-    let zero = 0;
-    for register in registers {
-        if *register != zero {
-            println!("Reg[{:>2}]: {:>5}", count, register);
-        }
-        count += 1;
-    }
-    println!("___")
 }
