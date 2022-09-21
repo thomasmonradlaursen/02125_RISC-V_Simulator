@@ -16,8 +16,9 @@ impl Fetch {
     }
 
     pub fn print_state(&self, instruction_string: &String) {
+        print!("{}[2J", 27 as char);
         println!("FETCH STAGE");
         println!("Program counter: {}", self.pc);
-        println!("Instruction: {}", instruction_string);
+        println!("Instruction: {}\n", instruction_string);
     }
 }

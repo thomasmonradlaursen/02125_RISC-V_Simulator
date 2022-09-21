@@ -243,11 +243,12 @@ pub fn print_registers_as_char(registers: &[i32; 32]) {
 pub fn print_registers_not_zero(registers: &[i32; 32]) {
     let mut count = 0;
     let zero = 0;
+    println!("NON-ZERO REGISTER VALUES");
     for register in registers {
         if *register != zero {
             println!("Reg[{:>2}]: {:>5}", count, register);
         }
         count += 1;
     }
-    println!("___")
+    println!();
 }

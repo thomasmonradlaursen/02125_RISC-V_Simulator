@@ -63,7 +63,7 @@ impl Decode {
 
     pub fn print_state(&self, instruction_string: &String) {
         println!("DECODE STAGE");
-        println!("Instruction: {}", instruction_string);
+        println!("Instruction: {}\n", instruction_string);
     }
 }
 

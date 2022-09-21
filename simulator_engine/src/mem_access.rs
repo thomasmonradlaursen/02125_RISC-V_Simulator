@@ -24,7 +24,6 @@ impl MemoryAccess {
     ) {
         self.destination = *destination;
         self.content = *content;
-        println!("Mem access: content = {}", content);
         match opcode {
             0x03 => match funct3 {
                 0x00 => {
@@ -96,6 +95,6 @@ impl MemoryAccess {
 
     pub fn print_state(&self, instruction_string: &String) {
         println!("MEMORY ACCESS STAGE");
-        println!("Instruction: {}", instruction_string);
+        println!("Instruction: {}\n", instruction_string);
     }
 }
