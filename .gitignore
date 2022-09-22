@@ -13,3 +13,7 @@ Cargo.lock
 **/*.DS_Store
 *.DS_Store
 .DS_Store
+
+# Local tests
+/simulator_engine/instruction_tests/
+/simulator_engine/cae_tests/
