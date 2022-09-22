@@ -12,8 +12,12 @@ pub fn to_assembly(instruction: &i32) -> String {
     let shamt = (instruction >> 20) & 0x01f;
 
     match opcode {
+        // TODO - Fix to something nicer...
         0x00 => {
-            return format!("");
+            return format!("empty");
+        }
+        0x01 => {
+            return format!("flush");
         }
         0x03 => match funct3 {
             0x00 => {

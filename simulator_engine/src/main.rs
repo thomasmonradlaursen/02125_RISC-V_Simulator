@@ -104,7 +104,7 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         decode.instruction = fetch.next_instruction;
         decode.decode_instruction(&reg);
         execute.instruction = decode.next_instruction;
-        execute.execute_instruction(&decode, &mut fetch.pc);
+        execute.execute_instruction(&mut fetch, &mut decode);
         mem_access.instruction = execute.next_instruction;
         mem_access.access_memory(&mut mem, &execute.next_mem_address, &execute.next_result, &execute.next_mem_opcode, &execute.next_mem_funct3, &execute.next_destination);
         writeback.instruction = mem_access.next_instruction;
@@ -115,6 +115,7 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         //print_registers_not_zero(&reg);
 
         if fetch.pc >= *program_len {
+            println!("PC: {}, program length: {}", fetch.pc, program_len);
             break;
         }
 

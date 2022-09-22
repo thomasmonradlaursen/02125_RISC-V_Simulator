@@ -1,4 +1,4 @@
-use crate::decode::Decode;
+use crate::{decode::Decode, fetch::Fetch};
 
 pub struct Execute {
     pub instruction: i32,
@@ -18,7 +18,7 @@ pub struct Execute {
 }
 
 impl Execute {
-    pub fn execute_instruction(&mut self, decode: &Decode, pc: &mut usize) {
+    pub fn execute_instruction(&mut self, fetch: &mut Fetch, decode: &mut Decode) {
         self.destination = decode.next_rd;
         self.mem_opcode = 0;
         self.mem_funct3 = 0;
@@ -221,7 +221,7 @@ impl Execute {
             0x63 => match decode.next_funct3 {
                 0x00 => {
                     if decode.next_rs1 == decode.next_rs2 {
-                        *pc = decode.next_sb_offset as usize;
+                        fetch.pc = decode.next_sb_offset as usize;
                     }
                     
                     /*if decode.next_rs1 == decode.next_rs2 {
@@ -231,7 +231,7 @@ impl Execute {
                 }
                 0x01 => {
                     if decode.next_rs1 != decode.next_rs2 {
-                        *pc += decode.next_sb_offset as usize;
+                        fetch.pc += decode.next_sb_offset as usize;
                     }
                     /*if decode.next_rs1 != decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -239,12 +239,10 @@ impl Execute {
                     };*/
                 }
                 0x04 => {
-                    println!("BLT");
-                    println!("Before {}", pc);
-                    println!("rs1: {}, rs2: {}", decode.next_rs1, decode.next_rs2);
                     if decode.next_rs1 < decode.next_rs2 {
-                        *pc += decode.next_sb_offset as usize;
-                        println!("After {}", pc);
+                        fetch.pc += decode.next_sb_offset as usize;
+                        fetch.instruction = 0x01;
+                        decode.instruction = 0x01;
                     }
                     /*if decode.next_rs1 < decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -253,7 +251,7 @@ impl Execute {
                 }
                 0x05 => {
                     if decode.next_rs1 >= decode.next_rs2 {
-                        *pc += decode.next_sb_offset as usize;
+                        fetch.pc += decode.next_sb_offset as usize;
                     }
                     /*if decode.next_rs1 >= decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -262,7 +260,7 @@ impl Execute {
                 }
                 0x06 => {
                     if (decode.next_rs1 as u32) < (decode.next_rs2 as u32) {
-                        *pc += decode.next_sb_offset as usize;
+                        fetch.pc += decode.next_sb_offset as usize;
                     }
                     /*if  (decode.next_rs1 as u32) < (decode.next_rs2 as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -271,7 +269,7 @@ impl Execute {
                 }
                 0x07 => {
                     if (decode.next_rs1 as u32) >= (decode.next_rs2 as u32) {
-                        *pc += decode.next_sb_offset as usize;
+                        fetch.pc += decode.next_sb_offset as usize;
                     }
                     /*if  (decode.next_rs1 as u32) >= (decode.next_rs2 as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -282,8 +280,8 @@ impl Execute {
             },
             0x67 => match decode.next_funct3 {
                 0x00 => {
-                    self.result = *pc as i32 + 4;
-                    *pc = (decode.next_rs1 + decode.next_imm110) as usize;
+                    self.result = fetch.pc as i32 + 4;
+                    fetch.pc = (decode.next_rs1 + decode.next_imm110) as usize;
                     /*reg[rd] = fetch.pc as i32 + 4;
                     fetch.pc = (decode.next_rs1 + decode.next_imm110) as usize;
                     branch = true; */
@@ -292,8 +290,8 @@ impl Execute {
             },
             0x6F => {
                 // TODO
-                self.result = *pc as i32 + 4;
-                *pc = *pc + decode.next_uj_offset as usize;
+                self.result = fetch.pc as i32 + 4;
+                fetch.pc += decode.next_uj_offset as usize;
                 /*reg[rd] = (fetch.pc + 4) as i32;
                 fetch.pc = fetch.pc + uj_format(&fetch.instruction) as usize;
                 branch = true;*/
