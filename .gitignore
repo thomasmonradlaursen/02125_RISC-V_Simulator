@@ -2,6 +2,7 @@
 # will have compiled files and executables
 /5_stage_simulator/target/
 /isa_simulator/target/
+/isa_simulator/.vscode/
 
 # Remove Cargo.lock from gitignore if creating an executable, leave it for libraries
 # More information here https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html

@@ -1,28 +1,11 @@
 use std::env;
 use std::fs;
 
-fn main() {
-    let reg: [i32; 32] = [0; 32];
-
-    let args: Vec<String> = env::args().collect();
-    let filename = &args[1];
-
-    let mut mem: [u8; 1048576] = [0; 1048576];
-    let len = read_bytes_to_mem(filename, &mut mem);
-
-    print_mem_instructions(&mem, &len);
-
-    print_instructions(&mem, &len);
-    //print_instructions(&instructions);
-
-    let res = simulate(reg, mem, &len);
-
-    print_registers(&res);
-
-    print_registers_as_char(&res);
+pub fn add(a : &i32, b: &i32) -> i32 {
+    a + b
 }
 
-fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> [i32; 32] {
+pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize) {
     println!("Hello Rust RISC-V world!");
 
     let mut pc: usize = 0;
@@ -304,8 +287,6 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
 
         reg[0] = 0;
 
-        print_registers_not_zero(&reg);
-
         pc += 16;
 
         if (pc >> 2) >= *program_len {
@@ -313,29 +294,17 @@ fn simulate(mut reg: [i32; 32], mut mem: [u8; 1048576], program_len: &usize) -> 
         }
     }
 
-    println!("Program exit");
+    //println!("Program exit");
 
-    reg
 }
 
-fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
-    let content = fs::read(filename).expect("File not found");
-    let mut count = 0;
-    while count < content.len() {
-        mem[count] = content[count];
-        count = count + 1;
-    }
-    println!("Bytes have been loaded to memory");
-    content.len()
-}
-
-fn convert_to_instruction(bytes: &[u8]) -> i32 {
+pub fn convert_to_instruction(bytes: &[u8]) -> i32 {
     let instruction: [u8; 4] = [bytes[3], bytes[2], bytes[1], bytes[0]];
     let next = i32::from_be_bytes(instruction);
     next
 }
 
-fn uj_format(instruction: &i32) -> usize {
+pub fn uj_format(instruction: &i32) -> usize {
     let bit20: i32 = (instruction >> 31) << 20; // 20
     let bit101: i32 = ((instruction >> 21) & 0x3ff) << 1; // 10 9 8 7 6 5 4 3 2 1
     let bit1912 = instruction & 0xff000; // 19 18 17 16 15 14 13 12
@@ -343,7 +312,7 @@ fn uj_format(instruction: &i32) -> usize {
     (((bit101 | bit1912) | bit11) | bit20) as usize
 }
 
-fn sb_format(instruction: &i32) -> usize {
+pub fn sb_format(instruction: &i32) -> usize {
     let bit11 = (instruction & 0x80) << 4; // 11
     let bit12 = (instruction >> 31) << 12; // 12
     let bit41 = ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
@@ -351,10 +320,31 @@ fn sb_format(instruction: &i32) -> usize {
     (((bit41 | bit105) | bit11) | bit12) as usize
 }
 
-fn s_format(instruction: &i32) -> usize {
+pub fn s_format(instruction: &i32) -> usize {
     let bit40 = (instruction >> 7) & 0x1f;
     let bit115 = (instruction >> 25) << 5;
     (bit40 | bit115) as usize
+}
+
+pub fn get_computation(file: &String) -> [i32; 32] {
+    let mut reg: [i32; 32] = [0; 32];
+    let mut mem: [u8; 1048576] = [0; 1048576];
+    let len = read_bytes_to_mem(&file, &mut mem);
+    simulate(&mut reg, &mut mem, &len);
+    reg
+}
+
+pub fn read_bytes_to_mem(file: &String, mem: &mut [u8; 1048576]) -> usize {
+    let content = match fs::read(file) {
+        Ok(bytes) => bytes,
+        Err(err) => panic!("{:?}", err),
+    };
+    let mut count = 0;
+    while count < content.len() {
+        mem[count] = content[count];
+        count = count + 1;
+    }
+    content.len()
 }
 
 fn print_mem_instructions(mem: &[u8], len: &usize) {
@@ -380,25 +370,6 @@ fn print_registers(registers: &[i32; 32]) {
     let mut count = 0;
     for register in registers {
         println!("Reg[{:>2}]: {:>10}", count, register);
-        count += 1;
-    }
-}
-
-fn print_registers_as_char(registers: &[i32; 32]) {
-    let mut count = 0;
-    for register in registers {
-        println!("Reg[{:>2}]: {:?}", count, (*register as u8) as char);
-        count += 1;
-    }
-}
-
-fn print_registers_not_zero(registers: &[i32; 32]) {
-    let mut count = 0;
-    let zero = 0;
-    for register in registers {
-        if *register != zero {
-            println!("Reg[{:>2}]: {:>5}", count, register);
-        }
         count += 1;
     }
 }
