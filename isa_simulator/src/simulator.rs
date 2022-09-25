@@ -1,10 +1,6 @@
 use std::env;
 use std::fs;
 
-pub fn add(a : &i32, b: &i32) -> i32 {
-    a + b
-}
-
 pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize) {
     println!("Hello Rust RISC-V world!");
 
@@ -294,7 +290,8 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
         }
     }
 
-    //println!("Program exit");
+    print_registers(&reg);
+    println!("Program exit");
 
 }
 
@@ -366,7 +363,7 @@ fn print_instructions(mem: &[u8], len: &usize) {
     }
 }
 
-fn print_registers(registers: &[i32; 32]) {
+pub fn print_registers(registers: &[i32; 32]) {
     let mut count = 0;
     for register in registers {
         println!("Reg[{:>2}]: {:>10}", count, register);
