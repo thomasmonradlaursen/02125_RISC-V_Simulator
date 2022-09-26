@@ -5,9 +5,10 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
     println!("Hello Rust RISC-V world!");
 
     let mut pc: usize = 0;
+    let mut branch = false;
 
     loop {
-        let instruction = convert_to_instruction(&mem[(pc >> 2)..((pc >> 2) + 4)]);
+        let instruction = convert_to_instruction(&mem[pc..(pc  + 4)]);
         let opcode = instruction & 0x7f;
         let funct3 = (instruction >> 12) & 0x07;
         let funct7 = instruction >> 25;
@@ -21,33 +22,34 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
         match opcode {
             0x03 => match funct3 {
                 0x00 => {
-                    reg[rd] = mem[(reg[rs1] + imm110) as usize] as i32;
+                    reg[rd] = (mem[(reg[rs1] + imm110) as usize] as i8) as i32;
                     println!("LB x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x01 => {
                     let index = (reg[rs1] + imm110) as usize;
-                    let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
-                    reg[rd] = i32::from_be_bytes(short);
+                    let bytes: [u8; 2] = [mem[index], mem[index + 1]];
+                    let short = i16::from_le_bytes(bytes);
+                    reg[rd] = short as i32;
                     println!("LH x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x02 => {
                     let index = (reg[rs1] + imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
-                    reg[rd] = i32::from_be_bytes(integer);
+                    reg[rd] = i32::from_le_bytes(integer);
                     println!("LW x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x04 => {
                     let index = (reg[rs1] + imm110) as usize;
                     let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
-                    reg[rd] = u32::from_be_bytes(short) as i32;
+                    reg[rd] = u32::from_le_bytes(short) as i32;
                     println!("LHU x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x05 => {
                     let index = (reg[rs1] + imm110) as usize;
                     let integer: [u8; 4] =
                         [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
-                    reg[rd] = u32::from_be_bytes(integer) as i32;
+                    reg[rd] = u32::from_le_bytes(integer) as i32;
                     println!("LWU x{}, {}(x{})", rd, imm110, rs1);
                 }
                 unimplemented => println!(
@@ -119,25 +121,27 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
             0x23 => match funct3 {
                 0x00 => {
                     let offset = s_format(&instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    let bytes = i32::to_le_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset] = bytes[0];
-                    println!("SB x{}, {}(x{})", rd, offset, rs1);
+                    println!();
+                    println!("0: {:8b}, 1: {:8b}, 2: {:8b}, 3: {:8b}\n", bytes[0], bytes[1], bytes[2], bytes[3]);
+                    println!("SB x{}, {}(x{})", rs2, offset, rs1);
                 }
                 0x01 => {
                     let offset = s_format(&instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    let bytes = i32::to_le_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset] = bytes[0];
                     mem[reg[rs1] as usize + offset + 1] = bytes[1];
-                    println!("SH x{}, {}(x{})", rd, offset, rs1);
+                    println!("SH x{}, {}(x{})", rs2, offset, rs1);
                 }
                 0x02 => {
                     let offset = s_format(&instruction);
-                    let bytes = i32::to_be_bytes(reg[rs2]);
+                    let bytes = i32::to_le_bytes(reg[rs2]);
                     mem[reg[rs1] as usize + offset] = bytes[0];
                     mem[reg[rs1] as usize + offset + 1] = bytes[1];
                     mem[reg[rs1] as usize + offset + 2] = bytes[2];
                     mem[reg[rs1] as usize + offset + 3] = bytes[3];
-                    println!("SW x{}, {}(x{})", rd, offset, rs1);
+                    println!("SW x{}, {}(x{})", rs2, offset, rs1);
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
@@ -218,36 +222,42 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
                 0x00 => {
                     if reg[rs1] == reg[rs2] {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
                 0x01 => {
                     if reg[rs1] != reg[rs2] {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
                 0x04 => {
                     if reg[rs1] < reg[rs2] {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
                 0x05 => {
                     if reg[rs1] >= reg[rs2] {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
                 0x06 => {
                     if (reg[rs1] as u32) < (reg[rs2] as u32) {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
                 0x07 => {
                     if (reg[rs1] as u32) >= (reg[rs2] as u32) {
                         pc += sb_format(&instruction);
+                        branch = true;
                     };
                     println!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
                 }
@@ -260,6 +270,7 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
                 0x00 => {
                     reg[rd] = pc as i32 + 4;
                     pc = (reg[rs1] + imm110) as usize;
+                    branch = true;
                     println!("JALR x{}, x{}, {}", rd, rs1, imm110);
                 }
                 unimplemented => println!(
@@ -270,6 +281,7 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
             0x6F => {
                 reg[rd] = (pc + 4) as i32;
                 pc = pc + uj_format(&instruction);
+                branch = true;
                 println!("JAL x{}, {}", rd, uj_format(&instruction));
             }
             0x73 => {
@@ -283,11 +295,18 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
 
         reg[0] = 0;
 
-        pc += 16;
+        if !branch {
+            pc += 4;
+        }
 
-        if (pc >> 2) >= *program_len {
+        branch = false;
+
+        print_registers_not_zero(&reg);
+
+        if pc >= *program_len {
             break;
         }
+
     }
 
     print_registers(&reg);
@@ -369,4 +388,17 @@ pub fn print_registers(registers: &[i32; 32]) {
         println!("Reg[{:>2}]: {:>10}", count, register);
         count += 1;
     }
+}
+
+pub fn print_registers_not_zero(registers: &[i32; 32]) {
+    let mut count = 0;
+    let zero = 0;
+    println!("NON-ZERO REGISTER VALUES");
+    for register in registers {
+        if *register != zero {
+            println!("Reg[{:>2}]: {:>5}", count, register);
+        }
+        count += 1;
+    }
+    println!();
 }

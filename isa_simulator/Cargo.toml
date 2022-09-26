@@ -9,8 +9,7 @@ edition = "2021"
 name = "mylib"
 path = "src/lib.rs"
 
-[[bin]]
-name = "mybin"
-path = "src/main.rs"
-
 [dependencies]
+
+[profile.dev]
+overflow-checks = false
