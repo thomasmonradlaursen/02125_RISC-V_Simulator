@@ -28,8 +28,7 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
                 0x01 => {
                     let index = (reg[rs1] + imm110) as usize;
                     let bytes: [u8; 2] = [mem[index], mem[index + 1]];
-                    let short = i16::from_le_bytes(bytes);
-                    reg[rd] = short as i32;
+                    reg[rd] = i16::from_le_bytes(bytes) as i32;
                     println!("LH x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x02 => {
@@ -40,17 +39,14 @@ pub fn simulate(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usiz
                     println!("LW x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x04 => {
-                    let index = (reg[rs1] + imm110) as usize;
-                    let short: [u8; 4] = [mem[index], mem[index + 1], 0, 0];
-                    reg[rd] = u32::from_le_bytes(short) as i32;
-                    println!("LHU x{}, {}(x{})", rd, imm110, rs1);
+                    reg[rd] = mem[(reg[rs1] + imm110) as usize] as i32;
+                    println!("LBU x{}, {}(x{})", rd, imm110, rs1);
                 }
                 0x05 => {
                     let index = (reg[rs1] + imm110) as usize;
-                    let integer: [u8; 4] =
-                        [mem[index], mem[index + 1], mem[index + 2], mem[index + 3]];
-                    reg[rd] = u32::from_le_bytes(integer) as i32;
-                    println!("LWU x{}, {}(x{})", rd, imm110, rs1);
+                    let bytes: [u8; 2] = [mem[index], mem[index + 1]];
+                    reg[rd] = u16::from_le_bytes(bytes) as i32;
+                    println!("LHU x{}, {}(x{})", rd, imm110, rs1);
                 }
                 unimplemented => println!(
                     "Funct3 {:#02x} for opcode {:#02x} not implemented...",
@@ -346,6 +342,7 @@ pub fn get_computation(file: &String) -> [i32; 32] {
     let mut reg: [i32; 32] = [0; 32];
     let mut mem: [u8; 1048576] = [0; 1048576];
     let len = read_bytes_to_mem(&file, &mut mem);
+    println!("Binary file: {:?}", file);
     simulate(&mut reg, &mut mem, &len);
     reg
 }
