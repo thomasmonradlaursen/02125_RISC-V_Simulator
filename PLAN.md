@@ -74,6 +74,7 @@ This will be the project plan.
 - Write a section about the web-page
 
 ## Week 14
+- Write remaining theory and implementation
 - Write an abstract for report
 - Write an introduction to the project
 - Write a conclusion for the project
