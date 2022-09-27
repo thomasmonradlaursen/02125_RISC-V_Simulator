@@ -80,7 +80,7 @@ This will be the project plan.
 - Proofread report
 
 ## Week 15
-- Attend 02159 Operating System exam
+- Operating System exam
 - Final proofread of report 
 - Finish report and submit project
 
