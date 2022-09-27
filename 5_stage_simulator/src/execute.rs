@@ -18,7 +18,7 @@ pub struct Execute {
 }
 
 impl Execute {
-    pub fn execute_instruction(&mut self, fetch: &mut Fetch, decode: &mut Decode) {
+    pub fn execute_instruction(&mut self, fetch: &mut Fetch, decode: &mut Decode, branch: &mut bool) {
         self.destination = decode.next_rd;
         self.mem_opcode = 0;
         self.mem_funct3 = 0;
@@ -221,9 +221,9 @@ impl Execute {
             0x63 => match decode.next_funct3 {
                 0x00 => {
                     if decode.next_rs1 == decode.next_rs2 {
-                        fetch.pc = decode.next_sb_offset as usize;
+                        fetch.pc += decode.next_sb_offset as usize;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
-                    
                     /*if decode.next_rs1 == decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
                         branch = true;
@@ -232,6 +232,7 @@ impl Execute {
                 0x01 => {
                     if decode.next_rs1 != decode.next_rs2 {
                         fetch.pc += decode.next_sb_offset as usize;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
                     /*if decode.next_rs1 != decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -241,8 +242,7 @@ impl Execute {
                 0x04 => {
                     if decode.next_rs1 < decode.next_rs2 {
                         fetch.pc += decode.next_sb_offset as usize;
-                        fetch.instruction = 0x01;
-                        decode.instruction = 0x01;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
                     /*if decode.next_rs1 < decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -252,6 +252,7 @@ impl Execute {
                 0x05 => {
                     if decode.next_rs1 >= decode.next_rs2 {
                         fetch.pc += decode.next_sb_offset as usize;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
                     /*if decode.next_rs1 >= decode.next_rs2 {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -261,6 +262,7 @@ impl Execute {
                 0x06 => {
                     if (decode.next_rs1 as u32) < (decode.next_rs2 as u32) {
                         fetch.pc += decode.next_sb_offset as usize;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
                     /*if  (decode.next_rs1 as u32) < (decode.next_rs2 as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -270,6 +272,7 @@ impl Execute {
                 0x07 => {
                     if (decode.next_rs1 as u32) >= (decode.next_rs2 as u32) {
                         fetch.pc += decode.next_sb_offset as usize;
+                        self.flush_and_branch(fetch, decode, branch);
                     }
                     /*if  (decode.next_rs1 as u32) >= (decode.next_rs2 as u32) {
                         fetch.pc += sb_format(&fetch.instruction) as usize;
@@ -282,6 +285,7 @@ impl Execute {
                 0x00 => {
                     self.result = fetch.pc as i32 + 4;
                     fetch.pc = (decode.next_rs1 + decode.next_imm110) as usize;
+                    self.flush_and_branch(fetch, decode, branch);
                     /*reg[rd] = fetch.pc as i32 + 4;
                     fetch.pc = (decode.next_rs1 + decode.next_imm110) as usize;
                     branch = true; */
@@ -292,18 +296,37 @@ impl Execute {
                 // TODO
                 self.result = fetch.pc as i32 + 4;
                 fetch.pc += decode.next_uj_offset as usize;
+                self.flush_and_branch(fetch, decode, branch);
                 /*reg[rd] = (fetch.pc + 4) as i32;
                 fetch.pc = fetch.pc + uj_format(&fetch.instruction) as usize;
                 branch = true;*/
             }
             0x73 => {
-                // TODO
+                // TODO ECALL
                 /*if reg[17] == 10 {
                     break;
                 }*/
             }
             _ => (),
         }
+    }
+
+    fn flush_and_branch(&mut self, fetch: &mut Fetch, decode: &mut Decode, branch: &mut bool) {
+        fetch.instruction = 0x01;
+        decode.instruction = 0x01;
+        decode.opcode = 0;
+        decode.funct3 = 0;
+        decode.funct7 = 0;
+        decode.rd = 0;
+        decode.rs1 = 0;
+        decode.rs2 = 0;
+        decode.imm3112 = 0;
+        decode.imm110 = 0;
+        decode.shamt = 0;
+        decode.s_offset = 0;
+        decode.sb_offset = 0;
+        decode.uj_offset = 0;
+        *branch = true;
     }
 
     pub fn update(&mut self) {

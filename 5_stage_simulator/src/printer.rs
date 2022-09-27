@@ -30,10 +30,10 @@ pub fn to_assembly(instruction: &i32) -> String {
                 return format!("LW x{}, {}(x{})", rd, imm110, rs1);
             }
             0x04 => {
-                return format!("LHU x{}, {}(x{})", rd, imm110, rs1);
+                return format!("LBU x{}, {}(x{})", rd, imm110, rs1);
             }
             0x05 => {
-                return format!("LWU x{}, {}(x{})", rd, imm110, rs1);
+                return format!("LHU x{}, {}(x{})", rd, imm110, rs1);
             }
             unimplemented => return format!(
                 "Funct3 {:#02x} for opcode {:#02x} not implemented...",
@@ -56,7 +56,6 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x04 => {
                 return format!("XORI x{}, x{}, {}", rd, rs1, imm110);
             }
-            // TODO:
             0x05 => match funct7 {
                 0x00 => {
                     return format!("SRLI x{}, x{}, {}", rd, rs1, shamt);

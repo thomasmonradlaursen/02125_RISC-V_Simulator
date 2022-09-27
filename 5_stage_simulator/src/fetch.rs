@@ -11,13 +11,14 @@ impl Fetch {
         self.instruction = i32::from_be_bytes(instruction);
     }
 
-    pub fn update(&mut self, pc_update: usize) {
-        self.pc += pc_update;
+    pub fn update(&mut self, branch: &mut bool) {
+        if !*branch {
+            self.pc += 4;
+        }
         self.next_instruction = self.instruction;
     }
 
     pub fn print_state(&self, instruction_string: &String) {
-        print!("{}[2J", 27 as char);
         println!("FETCH STAGE");
         println!("Program counter: {}", self.pc);
         println!("Instruction: {}\n", instruction_string);

@@ -28,12 +28,12 @@ impl MemoryAccess {
             0x03 => match funct3 {
                 0x00 => {
                     // LB - Load byte
-                    self.loaded_memory = mem[*address] as i32;
+                    self.loaded_memory = (mem[*address] as i8) as i32;
                 }
                 0x01 => {
                     // LH - Load halfword
                     self.loaded_memory =
-                        i32::from_be_bytes([mem[*address], mem[*address + 1], 0, 0]);
+                        (i16::from_be_bytes([mem[*address], mem[*address + 1]])) as i32;
                 }
                 0x02 => {
                     // LW - Load word
@@ -45,18 +45,13 @@ impl MemoryAccess {
                     ]);
                 }
                 0x04 => {
-                    // LHU - Load halfword unsigned
-                    self.loaded_memory =
-                    (u32::from_be_bytes([mem[*address], mem[*address + 1], 0, 0])) as i32;
+                    // LBU - Load byte unsigned
+                    self.loaded_memory = mem[*address] as i32;
                 }
                 0x05 => {
-                    // LWU - Load word unsigned
-                    self.loaded_memory = (u32::from_be_bytes([
-                        mem[*address],
-                        mem[*address + 1],
-                        mem[*address + 2],
-                        mem[*address + 3],
-                    ])) as i32;
+                    // LHU - Load halfword unsigned
+                    self.loaded_memory =
+                        (u16::from_be_bytes([mem[*address], mem[*address + 1]])) as i32;
                 }
                 _ => (),
             },
