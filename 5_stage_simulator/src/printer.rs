@@ -13,12 +13,22 @@ pub fn to_assembly(instruction: &i32) -> String {
 
     match opcode {
         // TODO - Fix to something nicer...
-        0x00 => {
-            return format!("empty");
+        0x00 => match funct3 {
+            0x00 => {
+                return format!("empty");
+            }
+            0x01 => {
+                return format!("flush");
+            }
+            0x02 => {
+                return format!("terminate");
+            }
+            unimplemented => return format!(
+                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                unimplemented, opcode
+            ),
         }
-        0x01 => {
-            return format!("flush");
-        }
+        
         0x03 => match funct3 {
             0x00 => {
                 return format!("LB x{}, {}(x{})", rd, imm110, rs1);

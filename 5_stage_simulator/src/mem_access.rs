@@ -10,6 +10,9 @@ pub struct MemoryAccess {
 
     pub content: i32,
     pub next_content: i32,
+
+    pub reg_write: bool,
+    pub next_reg_write: bool,
 }
 
 impl MemoryAccess {
@@ -21,9 +24,11 @@ impl MemoryAccess {
         opcode: &i32,
         funct3: &i32,
         destination: &usize,
+        reg_write: &bool,
     ) {
         self.destination = *destination;
         self.content = *content;
+        self.reg_write = *reg_write;
         match opcode {
             0x03 => match funct3 {
                 0x00 => {
@@ -86,6 +91,7 @@ impl MemoryAccess {
         self.next_loaded_memory = self.loaded_memory;
         self.next_destination = self.destination;
         self.next_content = self.content;
+        self.next_reg_write = self.reg_write;
     }
 
     pub fn print_state(&self, instruction_string: &String) {

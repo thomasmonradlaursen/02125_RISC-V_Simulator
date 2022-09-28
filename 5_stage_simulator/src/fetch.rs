@@ -1,5 +1,6 @@
 pub struct Fetch {
     pub pc: usize,
+    pub next_pc: usize,
     pub instruction: i32,
     pub next_instruction: i32,
 }
@@ -11,8 +12,9 @@ impl Fetch {
         self.instruction = i32::from_be_bytes(instruction);
     }
 
-    pub fn update(&mut self, branch: &mut bool) {
-        if !*branch {
+    pub fn update(&mut self, program_len: &usize, branch: &mut bool) {
+        self.next_pc = self.pc;
+        if !*branch && self.pc < *program_len {
             self.pc += 4;
         }
         self.next_instruction = self.instruction;

@@ -1,6 +1,8 @@
 pub struct Decode {
     pub instruction: i32,
     pub next_instruction: i32,
+    pub pc: usize,
+    pub next_pc: usize,
     
     pub opcode: i32,
     pub funct3: i32,
@@ -47,6 +49,7 @@ impl Decode {
 
     pub fn update(&mut self) {
         self.next_instruction = self.instruction;
+        self.next_pc = self.pc;
         self.next_opcode = self.opcode;
         self.next_funct3 = self.funct3;
         self.next_funct7 = self.funct7;
@@ -63,6 +66,7 @@ impl Decode {
 
     pub fn print_state(&self, instruction_string: &String) {
         println!("DECODE STAGE");
+        println!("Program counter: {}", self.pc);
         println!("Instruction: {}\n", instruction_string);
     }
 }

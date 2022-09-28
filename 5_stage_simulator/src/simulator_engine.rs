@@ -10,10 +10,9 @@ use std::io;
 pub fn run_simulation(filename: &String, stepwise: bool) -> [i32; 32] {
     let mut reg: [i32; 32] = [0; 32];
     let mut mem: [u8; 1048576] = [0; 1048576];
-    let mut branch: bool = false;
     let len = read_bytes_to_mem(filename, &mut mem);
 
-    run_engine(&mut reg, &mut mem, &mut branch, &len, stepwise);
+    run_engine(&mut reg, &mut mem, &len, stepwise);
 
     printer::print_registers(&reg);
 
@@ -23,7 +22,6 @@ pub fn run_simulation(filename: &String, stepwise: bool) -> [i32; 32] {
 fn run_engine(
     reg: &mut [i32; 32],
     mem: &mut [u8; 1048576],
-    branch: &mut bool,
     program_len: &usize,
     stepwise: bool,
 ) {
@@ -31,6 +29,7 @@ fn run_engine(
 
     let mut fetch = Fetch {
         pc: 0,
+        next_pc: 0,
         instruction: 0,
         next_instruction: 0,
     };
@@ -38,6 +37,8 @@ fn run_engine(
     let mut decode = Decode {
         instruction: 0,
         next_instruction: 0,
+        pc: 0,
+        next_pc: 0,
         opcode: 0,
         funct3: 0,
         funct7: 0,
@@ -67,6 +68,7 @@ fn run_engine(
     let mut execute = Execute {
         instruction: 0,
         next_instruction: 0,
+        pc: 0,
         result: 0,
         mem_address: 0,
         destination: 0,
@@ -77,6 +79,8 @@ fn run_engine(
         next_destination: 0,
         next_mem_opcode: 0,
         next_mem_funct3: 0,
+        reg_write: false,
+        next_reg_write: false,
     };
 
     let mut mem_access = MemoryAccess {
@@ -88,24 +92,32 @@ fn run_engine(
         next_destination: 0,
         content: 0,
         next_content: 0,
+        reg_write: false,
+        next_reg_write: false,
     };
 
     let mut writeback = Writeback {
         instruction: 0,
         next_instruction: 0,
+        reg_write: false,
     };
 
-    loop {
-        *branch = false;
+    let mut branch: bool;
+    let mut running: bool = true;
+
+    while running {
+        branch = false;
 
         //Setup next instruction
         if fetch.pc < *program_len {
             fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
         } else {
-            fetch.instruction = 0x00;
+            fetch.instruction = 0x2000;
         }
         decode.instruction = fetch.next_instruction;
+        decode.pc = fetch.next_pc;
         execute.instruction = decode.next_instruction;
+        execute.pc = decode.next_pc;
         mem_access.instruction = execute.next_instruction;
         writeback.instruction = mem_access.next_instruction;
 
@@ -118,7 +130,7 @@ fn run_engine(
 
         // Execute stage
         decode.decode_instruction(&reg);
-        execute.execute_instruction(&mut fetch, &mut decode, branch);
+        execute.execute_instruction(&mut fetch, &mut decode, &mut branch);
         mem_access.access_memory(
             mem,
             &execute.next_mem_address,
@@ -126,8 +138,9 @@ fn run_engine(
             &execute.next_mem_opcode,
             &execute.next_mem_funct3,
             &execute.next_destination,
+            &execute.next_reg_write,
         );
-        writeback.writeback(&mem_access.next_destination, &mem_access.next_content, reg);
+        writeback.writeback(&mem_access.next_destination, &mem_access.next_content, reg, &mut running, &mem_access.next_reg_write);
 
         reg[0] = 0;
 
@@ -143,7 +156,7 @@ fn run_engine(
             io::stdin().read_line(&mut s).expect("Did not read");
         }
 
-        fetch.update(branch);
+        fetch.update(&program_len, &mut branch);
         decode.update();
         execute.update();
         mem_access.update();
