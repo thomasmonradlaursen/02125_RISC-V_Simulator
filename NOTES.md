@@ -12,3 +12,6 @@ Using >> in an *i32* will result in an arithmetic right shift, and using >> in a
 ## RISC-V
 ### Upper immediates and most significant bits
 When working with the most significant bits of immidiates, remember to include the leading 1s.
+
+### Datapath implementations
+See page 294 and 318 in Computer Organization and Design
