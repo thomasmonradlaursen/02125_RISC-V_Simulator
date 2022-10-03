@@ -19,87 +19,26 @@ pub fn run_simulation(filename: &String, stepwise: bool) -> [i32; 32] {
     reg
 }
 
-fn run_engine(
-    reg: &mut [i32; 32],
-    mem: &mut [u8; 1048576],
-    program_len: &usize,
-    stepwise: bool,
-) {
+fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize, stepwise: bool) {
     println!("Hello Rust RISC-V world!");
 
     let mut fetch = Fetch {
-        pc: 0,
-        next_pc: 0,
-        instruction: 0,
-        next_instruction: 0,
+        ..Default::default()
     };
 
     let mut decode = Decode {
-        instruction: 0,
-        next_instruction: 0,
-        pc: 0,
-        next_pc: 0,
-        opcode: 0,
-        funct3: 0,
-        funct7: 0,
-        rd: 0,
-        rs1: 0,
-        rs2: 0,
-        imm3112: 0,
-        imm110: 0,
-        shamt: 0,
-        s_offset: 0,
-        sb_offset: 0,
-        uj_offset: 0,
-        next_opcode: 0,
-        next_funct3: 0,
-        next_funct7: 0,
-        next_rd: 0,
-        next_rs1: 0,
-        next_rs2: 0,
-        next_imm3112: 0,
-        next_imm110: 0,
-        next_shamt: 0,
-        next_s_offset: 0,
-        next_sb_offset: 0,
-        next_uj_offset: 0,
+        ..Default::default()
     };
-
     let mut execute = Execute {
-        instruction: 0,
-        next_instruction: 0,
-        pc: 0,
-        result: 0,
-        mem_address: 0,
-        destination: 0,
-        mem_opcode: 0,
-        mem_funct3: 0,
-        next_result: 0,
-        next_mem_address: 0,
-        next_destination: 0,
-        next_mem_opcode: 0,
-        next_mem_funct3: 0,
-        reg_write: false,
-        next_reg_write: false,
+        ..Default::default()
     };
 
     let mut mem_access = MemoryAccess {
-        instruction: 0,
-        next_instruction: 0,
-        loaded_memory: 0,
-        next_loaded_memory: 0,
-        destination: 0,
-        next_destination: 0,
-        content: 0,
-        next_content: 0,
-        reg_write: false,
-        next_reg_write: false,
+        ..Default::default()
     };
 
     let mut writeback = Writeback {
-        instruction: 0,
-        next_instruction: 0,
-        reg_write: false,
+        ..Default::default()
     };
 
     let mut branch: bool;
@@ -140,16 +79,15 @@ fn run_engine(
             &execute.next_destination,
             &execute.next_reg_write,
         );
-        writeback.writeback(&mem_access.next_destination, &mem_access.next_content, reg, &mut running, &mem_access.next_reg_write);
+        writeback.writeback(
+            &mem_access.next_destination,
+            &mem_access.next_content,
+            reg,
+            &mut running,
+            &mem_access.next_reg_write,
+        );
 
         reg[0] = 0;
-
-        //print_registers_not_zero(&reg);
-
-        /*if !(fetch.pc < *program_len) {
-            println!("PC: {}, program length: {}", fetch.pc, program_len);
-            break;
-        }*/
 
         if stepwise {
             let mut s = String::new();
@@ -163,8 +101,6 @@ fn run_engine(
         writeback.update();
 
         printer::print_registers_not_zero(&reg);
-
-        //print!("{}[2J", 27 as char);
     }
 
     println!("Program exit");

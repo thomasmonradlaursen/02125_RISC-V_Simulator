@@ -15,6 +15,23 @@ pub struct MemoryAccess {
     pub next_reg_write: bool,
 }
 
+impl Default for MemoryAccess {
+    fn default() -> Self {
+        Self {
+            instruction: Default::default(),
+            next_instruction: Default::default(),
+            loaded_memory: Default::default(),
+            next_loaded_memory: Default::default(),
+            destination: Default::default(),
+            next_destination: Default::default(),
+            content: Default::default(),
+            next_content: Default::default(),
+            reg_write: Default::default(),
+            next_reg_write: Default::default(),
+        }
+    }
+}
+
 impl MemoryAccess {
     pub fn access_memory(
         &mut self,

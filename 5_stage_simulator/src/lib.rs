@@ -5,3 +5,4 @@ pub mod mem_access;
 pub mod writeback;
 pub mod printer;
 pub mod simulator_engine;
+pub mod control;

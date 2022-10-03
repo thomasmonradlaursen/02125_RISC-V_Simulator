@@ -4,8 +4,25 @@ pub struct Writeback {
     pub reg_write: bool,
 }
 
+impl Default for Writeback {
+    fn default() -> Self {
+        Self {
+            instruction: Default::default(),
+            next_instruction: Default::default(),
+            reg_write: Default::default(),
+        }
+    }
+}
+
 impl Writeback {
-    pub fn writeback(&self, destination: &usize, content: &i32, reg: &mut [i32; 32], running: &mut bool, reg_write: &bool) {
+    pub fn writeback(
+        &self,
+        destination: &usize,
+        content: &i32,
+        reg: &mut [i32; 32],
+        running: &mut bool,
+        reg_write: &bool,
+    ) {
         if *content == -1 {
             *running = false;
         }

@@ -1,9 +1,11 @@
+use crate::control::Control;
+
 pub struct Decode {
     pub instruction: i32,
     pub next_instruction: i32,
     pub pc: usize,
     pub next_pc: usize,
-    
+
     pub opcode: i32,
     pub funct3: i32,
     pub funct7: i32,
@@ -16,7 +18,7 @@ pub struct Decode {
     pub s_offset: i32,
     pub sb_offset: i32,
     pub uj_offset: i32,
-    
+
     pub next_opcode: i32,
     pub next_funct3: i32,
     pub next_funct7: i32,
@@ -29,10 +31,14 @@ pub struct Decode {
     pub next_s_offset: i32,
     pub next_sb_offset: i32,
     pub next_uj_offset: i32,
+
+    pub control: Control,
+    pub next_control: Control,
+
 }
 
 impl Decode {
-    pub fn decode_instruction(&mut self, reg: &[i32;32]) {
+    pub fn decode_instruction(&mut self, reg: &[i32; 32]) {
         self.opcode = self.instruction & 0x7f;
         self.funct3 = (self.instruction >> 12) & 0x07;
         self.funct7 = self.instruction >> 25;
@@ -45,6 +51,7 @@ impl Decode {
         self.s_offset = get_s_offset(&self.instruction);
         self.sb_offset = get_sb_offset(&self.instruction);
         self.uj_offset = get_uj_offset(&self.instruction);
+        self.control = Control::compute_control(&self.opcode);
     }
 
     pub fn update(&mut self) {
@@ -62,12 +69,51 @@ impl Decode {
         self.next_s_offset = self.s_offset;
         self.next_sb_offset = self.sb_offset;
         self.next_uj_offset = self.uj_offset;
+        self.next_control = self.control;
     }
 
     pub fn print_state(&self, instruction_string: &String) {
         println!("DECODE STAGE");
         println!("Program counter: {}", self.pc);
-        println!("Instruction: {}\n", instruction_string);
+        println!("Instruction: {}", instruction_string);
+        println!("Control: {:?}\n", self.control);
+    }
+}
+
+impl Default for Decode {
+    fn default() -> Self {
+        Self {
+            instruction: Default::default(),
+            next_instruction: Default::default(),
+            pc: Default::default(),
+            next_pc: Default::default(),
+            opcode: Default::default(),
+            funct3: Default::default(),
+            funct7: Default::default(),
+            rd: Default::default(),
+            rs1: Default::default(),
+            rs2: Default::default(),
+            imm3112: Default::default(),
+            imm110: Default::default(),
+            shamt: Default::default(),
+            s_offset: Default::default(),
+            sb_offset: Default::default(),
+            uj_offset: Default::default(),
+            control: Control::default(),
+            next_opcode: Default::default(),
+            next_funct3: Default::default(),
+            next_funct7: Default::default(),
+            next_rd: Default::default(),
+            next_rs1: Default::default(),
+            next_rs2: Default::default(),
+            next_imm3112: Default::default(),
+            next_imm110: Default::default(),
+            next_shamt: Default::default(),
+            next_s_offset: Default::default(),
+            next_sb_offset: Default::default(),
+            next_uj_offset: Default::default(),
+            next_control: Control::default(),
+        }
     }
 }
 

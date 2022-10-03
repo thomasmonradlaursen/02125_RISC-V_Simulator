@@ -5,9 +5,19 @@ pub struct Fetch {
     pub next_instruction: i32,
 }
 
+impl Default for Fetch {
+    fn default() -> Self {
+        Self {
+            pc: Default::default(),
+            next_pc: Default::default(),
+            instruction: Default::default(),
+            next_instruction: Default::default(),
+        }
+    }
+}
+
 impl Fetch {
     pub fn fetch_instruction(&mut self, mem: &[u8]) {
-        println!("{}", self.pc);
         let instruction: [u8; 4] = [mem[3], mem[2], mem[1], mem[0]];
         self.instruction = i32::from_be_bytes(instruction);
     }
