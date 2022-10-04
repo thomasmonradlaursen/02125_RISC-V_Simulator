@@ -1,6 +1,7 @@
 use crate::decode::Decode;
 use crate::execute::Execute;
 use crate::fetch::Fetch;
+use crate::hazard::HazardDetectionUnit;
 use crate::mem_access::MemoryAccess;
 use crate::printer;
 use crate::writeback::Writeback;
@@ -41,6 +42,10 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         ..Default::default()
     };
 
+    let mut hazard = HazardDetectionUnit {
+        ..Default::default()
+    };
+
     let mut branch: bool;
     let mut running: bool = true;
 
@@ -48,17 +53,17 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         branch = false;
 
         //Setup next instruction
-        if fetch.pc < *program_len {
-            fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
-        } else {
-            fetch.instruction = 0x2000;
+        if execute.instruction != 0x3000 {
+            if fetch.pc < *program_len {
+                fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
+            } else {
+                fetch.instruction = 0x2000;
+            }
+            decode.initialize_fields(&fetch);
         }
-        decode.instruction = fetch.next_instruction;
-        decode.pc = fetch.next_pc;
-        execute.instruction = decode.next_instruction;
-        execute.pc = decode.next_pc;
-        mem_access.instruction = execute.next_instruction;
-        writeback.instruction = mem_access.next_instruction;
+        execute.initialize_fields(&decode);
+        mem_access.initialize_fields(&execute);
+        writeback.initialize_fields(&mem_access);
 
         // Print instructions for each stage
         fetch.print_state(&printer::to_assembly(&fetch.instruction));
@@ -66,6 +71,11 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         execute.print_state(&printer::to_assembly(&execute.instruction));
         mem_access.print_state(&printer::to_assembly(&mem_access.instruction));
         writeback.print_state(&printer::to_assembly(&writeback.instruction));
+
+        // Check for hazards
+        hazard.initialize_fields(&decode, &execute, &mem_access);
+        hazard.print_values();
+        hazard.detect_hazard(&mut decode);
 
         // Execute stage
         decode.decode_instruction(&reg);

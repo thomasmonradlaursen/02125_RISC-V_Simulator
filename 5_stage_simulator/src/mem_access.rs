@@ -1,3 +1,5 @@
+use crate::execute::Execute;
+
 pub struct MemoryAccess {
     pub instruction: i32,
     pub next_instruction: i32,
@@ -13,6 +15,14 @@ pub struct MemoryAccess {
 
     pub reg_write: bool,
     pub next_reg_write: bool,
+
+    pub rs1_address: usize,
+    pub rs2_address: usize,
+    pub next_rs1_address: usize,
+    pub next_rs2_address: usize,
+
+    pub rd: usize,
+    pub next_rd: usize,
 }
 
 impl Default for MemoryAccess {
@@ -28,11 +38,25 @@ impl Default for MemoryAccess {
             next_content: Default::default(),
             reg_write: Default::default(),
             next_reg_write: Default::default(),
+            rs1_address: Default::default(),
+            rs2_address: Default::default(),
+            next_rs1_address: Default::default(),
+            next_rs2_address: Default::default(),
+            rd: Default::default(),
+            next_rd: Default::default(),
         }
     }
 }
 
 impl MemoryAccess {
+
+    pub fn initialize_fields(&mut self, execute: &Execute) {
+        self.instruction = execute.next_instruction;
+        self.rs1_address = execute.next_rs1_address;
+        self.rs2_address = execute.next_rs1_address;
+        self.rd = execute.next_rd;
+    }
+
     pub fn access_memory(
         &mut self,
         mem: &mut [u8; 1048576],
@@ -109,6 +133,9 @@ impl MemoryAccess {
         self.next_destination = self.destination;
         self.next_content = self.content;
         self.next_reg_write = self.reg_write;
+        self.next_rd = self.rd;
+        self.next_rs1_address = self.rs1_address;
+        self.next_rs2_address = self.rs2_address;
     }
 
     pub fn print_state(&self, instruction_string: &String) {

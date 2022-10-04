@@ -16,6 +16,13 @@ pub struct Execute {
     pub mem_funct3: i32,
     pub reg_write: bool,
 
+    pub rs1_address: usize,
+    pub rs2_address: usize,
+    pub rd: usize,
+    pub next_rs1_address: usize,
+    pub next_rs2_address: usize,
+    pub next_rd: usize,
+
     pub next_result: i32,
     pub next_mem_address: usize,
     pub next_destination: usize,
@@ -44,11 +51,26 @@ impl Default for Execute {
             next_mem_funct3: Default::default(),
             next_reg_write: Default::default(),
             next_control: Control::default(),
+            rs1_address: Default::default(),
+            rs2_address: Default::default(),
+            next_rs1_address: Default::default(),
+            next_rs2_address: Default::default(),
+            rd: Default::default(),
+            next_rd: Default::default(),
         }
     }
 }
 
 impl Execute {
+    
+    pub fn initialize_fields(&mut self, decode: &Decode) {
+        self.instruction = decode.next_instruction;
+        self.rs1_address = decode.next_rs1_address;
+        self.rs2_address = decode.next_rs1_address;
+        self.rd = decode.next_rd;
+        self.pc = decode.next_pc;
+    }
+    
     pub fn execute_instruction(
         &mut self,
         fetch: &mut Fetch,
@@ -325,6 +347,9 @@ impl Execute {
         self.next_mem_opcode = self.mem_opcode;
         self.next_mem_funct3 = self.mem_funct3;
         self.next_reg_write = self.reg_write;
+        self.next_rd = self.rd;
+        self.next_rs1_address = self.rs1_address;
+        self.next_rs2_address = self.rs2_address;
     }
 
     pub fn print_state(&self, instruction_string: &String) {

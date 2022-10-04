@@ -1,4 +1,4 @@
-use crate::control::Control;
+use crate::{control::Control, fetch::Fetch};
 
 pub struct Decode {
     pub instruction: i32,
@@ -12,6 +12,8 @@ pub struct Decode {
     pub rd: usize,
     pub rs1: i32,
     pub rs2: i32,
+    pub rs1_address: usize,
+    pub rs2_address: usize,
     pub imm3112: i32,
     pub imm110: i32,
     pub shamt: i32,
@@ -25,6 +27,8 @@ pub struct Decode {
     pub next_rd: usize,
     pub next_rs1: i32,
     pub next_rs2: i32,
+    pub next_rs1_address: usize,
+    pub next_rs2_address: usize,
     pub next_imm3112: i32,
     pub next_imm110: i32,
     pub next_shamt: i32,
@@ -38,13 +42,24 @@ pub struct Decode {
 }
 
 impl Decode {
+
+    pub fn initialize_fields(&mut self, fetch: &Fetch) {
+        self.instruction = fetch.next_instruction;
+        self.rd = ((self.instruction >> 7) & 0x01f) as usize;
+        self.rs1_address = ((self.instruction >> 15) & 0x01f) as usize;
+        self.rs2_address = ((self.instruction >> 20) & 0x01f) as usize;
+        self.pc = fetch.next_pc;
+    }
+
     pub fn decode_instruction(&mut self, reg: &[i32; 32]) {
         self.opcode = self.instruction & 0x7f;
         self.funct3 = (self.instruction >> 12) & 0x07;
         self.funct7 = self.instruction >> 25;
         self.rd = ((self.instruction >> 7) & 0x01f) as usize;
-        self.rs1 = reg[((self.instruction >> 15) & 0x01f) as usize];
-        self.rs2 = reg[((self.instruction >> 20) & 0x01f) as usize];
+        self.rs1_address = ((self.instruction >> 15) & 0x01f) as usize;
+        self.rs2_address = ((self.instruction >> 20) & 0x01f) as usize;
+        self.rs1 = reg[self.rs1_address];
+        self.rs2 = reg[self.rs2_address];
         self.imm3112 = (self.instruction >> 12) << 12;
         self.imm110 = self.instruction >> 20;
         self.shamt = (self.instruction >> 20) & 0x01f;
@@ -63,6 +78,8 @@ impl Decode {
         self.next_rd = self.rd;
         self.next_rs1 = self.rs1;
         self.next_rs2 = self.rs2;
+        self.next_rs1_address = self.rs1_address;
+        self.next_rs2_address = self.rs2_address;
         self.next_imm3112 = self.imm3112;
         self.next_imm110 = self.imm110;
         self.next_shamt = self.shamt;
@@ -76,7 +93,7 @@ impl Decode {
         println!("DECODE STAGE");
         println!("Program counter: {}", self.pc);
         println!("Instruction: {}", instruction_string);
-        println!("Control: {:?}\n", self.control);
+        println!();
     }
 }
 
@@ -93,6 +110,8 @@ impl Default for Decode {
             rd: Default::default(),
             rs1: Default::default(),
             rs2: Default::default(),
+            rs1_address: Default::default(),
+            rs2_address: Default::default(),
             imm3112: Default::default(),
             imm110: Default::default(),
             shamt: Default::default(),
@@ -106,6 +125,8 @@ impl Default for Decode {
             next_rd: Default::default(),
             next_rs1: Default::default(),
             next_rs2: Default::default(),
+            next_rs1_address: Default::default(),
+            next_rs2_address: Default::default(),
             next_imm3112: Default::default(),
             next_imm110: Default::default(),
             next_shamt: Default::default(),

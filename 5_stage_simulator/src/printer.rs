@@ -21,7 +21,10 @@ pub fn to_assembly(instruction: &i32) -> String {
                 return format!("flush");
             }
             0x02 => {
-                return format!("terminate");
+                return format!("end of file");
+            }
+            0x03 => {
+                return format!("stall");
             }
             unimplemented => return format!(
                 "Funct3 {:#02x} for opcode {:#02x} not implemented...",
