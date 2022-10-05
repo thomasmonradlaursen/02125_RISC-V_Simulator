@@ -6,6 +6,7 @@ pub mod mem_access;
 pub mod writeback;
 
 // Control logic
+pub mod registers;
 pub mod control;
 pub mod hazard;
 pub mod foward;

@@ -1,10 +1,5 @@
-use crate::decode::Decode;
-use crate::execute::Execute;
-use crate::fetch::Fetch;
 use crate::hazard::HazardDetectionUnit;
-use crate::mem_access::MemoryAccess;
 use crate::printer;
-use crate::writeback::Writeback;
 use std::fs;
 use std::io;
 
@@ -21,39 +16,26 @@ pub fn run_simulation(filename: &String, stepwise: bool) -> [i32; 32] {
 }
 
 fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize, stepwise: bool) {
-    println!("Hello Rust RISC-V world!");
-
-    let mut fetch = Fetch {
-        ..Default::default()
-    };
-
-    let mut decode = Decode {
-        ..Default::default()
-    };
-    let mut execute = Execute {
-        ..Default::default()
-    };
-
-    let mut mem_access = MemoryAccess {
-        ..Default::default()
-    };
-
-    let mut writeback = Writeback {
-        ..Default::default()
-    };
+    
+    println!("Hello Rust RISC-V Pipeline!");
 
     let mut hazard = HazardDetectionUnit {
         ..Default::default()
     };
 
+    
+
     let mut branch: bool;
     let mut running: bool = true;
+    let mut stall: bool;
 
     while running {
+        
         branch = false;
+        stall = false;
 
         //Setup next instruction
-        if execute.instruction != 0x3000 {
+        if !stall {
             if fetch.pc < *program_len {
                 fetch.fetch_instruction(&mem[fetch.pc..(fetch.pc + 4)]);
             } else {
@@ -75,10 +57,12 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         // Check for hazards
         hazard.initialize_fields(&decode, &execute, &mem_access);
         hazard.print_values();
-        hazard.detect_hazard(&mut decode);
+        hazard.detect_hazard(&mut decode, &mut stall);
 
         // Execute stage
-        decode.decode_instruction(&reg);
+        if !stall {
+            decode.decode_instruction(&reg);
+        }
         execute.execute_instruction(&mut fetch, &mut decode, &mut branch);
         mem_access.access_memory(
             mem,
@@ -104,7 +88,9 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
             io::stdin().read_line(&mut s).expect("Did not read");
         }
 
-        fetch.update(&program_len, &mut branch);
+        if !stall {
+            fetch.update(&program_len, &mut branch);
+        }
         decode.update();
         execute.update();
         mem_access.update();

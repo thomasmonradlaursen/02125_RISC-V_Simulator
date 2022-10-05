@@ -44,7 +44,7 @@ impl HazardDetectionUnit {
             .set_fields(writeback.rd, writeback.rs1_address, writeback.rs2_address);
     }
 
-    pub fn detect_hazard(&self, decode: &mut Decode) {
+    pub fn detect_hazard(&self, decode: &mut Decode, stall: &mut bool) {
         println!("HAZARD DETECTION UNIT:");
         if self.ex_mem_fields.rd != 0 {
             if self.ex_mem_fields.rd == self.id_ex_fields.rs1 {
@@ -52,14 +52,14 @@ impl HazardDetectionUnit {
                     "Memory access - rd: {}, Execute - rs1: {}",
                     self.ex_mem_fields.rd, self.id_ex_fields.rs1
                 );
-                decode.instruction = 0x3000;
+                clear_decode(decode, stall);
             }
             if self.ex_mem_fields.rd == self.id_ex_fields.rs2 {
                 println!(
                     "Memory access - rd: {}, Execute - rs2: {}",
                     self.ex_mem_fields.rd, self.id_ex_fields.rs2
                 );
-                decode.instruction = 0x3000;
+                clear_decode(decode, stall);
             }
         }
         if self.mem_wb_fields.rd != 0 {
@@ -68,14 +68,14 @@ impl HazardDetectionUnit {
                     "Writeback - rd: {}, Execute - rs1: {}",
                     self.mem_wb_fields.rd, self.id_ex_fields.rs1
                 );
-                decode.instruction = 0x3000;
+                clear_decode(decode, stall);
             }
             if self.mem_wb_fields.rd == self.id_ex_fields.rs2 {
                 println!(
                     "Writeback - rd: {}, Execute - rs2: {}",
                     self.ex_mem_fields.rd, self.id_ex_fields.rs2
                 );
-                decode.instruction = 0x3000;
+                clear_decode(decode, stall);
             }
         }
         println!();
@@ -97,4 +97,10 @@ impl HazardDetectionUnit {
         );
         println!();
     }
+}
+
+pub fn clear_decode(decode: &mut Decode, stall: &mut bool) {
+    decode.flush();
+    decode.next_instruction = 0x3000;
+    *stall = true;
 }

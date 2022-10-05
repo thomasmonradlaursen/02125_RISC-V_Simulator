@@ -1,144 +1,72 @@
-use crate::{control::Control, fetch::Fetch};
+use crate::{
+    control::Control,
+    registers::{IDEX, IFID},
+};
 
-pub struct Decode {
-    pub instruction: i32,
-    pub next_instruction: i32,
-    pub pc: usize,
-    pub next_pc: usize,
-
+pub struct Decoding {
     pub opcode: i32,
     pub funct3: i32,
     pub funct7: i32,
-    pub rd: usize,
     pub rs1: i32,
     pub rs2: i32,
-    pub rs1_address: usize,
-    pub rs2_address: usize,
     pub imm3112: i32,
     pub imm110: i32,
     pub shamt: i32,
     pub s_offset: i32,
     pub sb_offset: i32,
     pub uj_offset: i32,
-
-    pub next_opcode: i32,
-    pub next_funct3: i32,
-    pub next_funct7: i32,
-    pub next_rd: usize,
-    pub next_rs1: i32,
-    pub next_rs2: i32,
-    pub next_rs1_address: usize,
-    pub next_rs2_address: usize,
-    pub next_imm3112: i32,
-    pub next_imm110: i32,
-    pub next_shamt: i32,
-    pub next_s_offset: i32,
-    pub next_sb_offset: i32,
-    pub next_uj_offset: i32,
-
-    pub control: Control,
-    pub next_control: Control,
-
 }
 
-impl Decode {
-
-    pub fn initialize_fields(&mut self, fetch: &Fetch) {
-        self.instruction = fetch.next_instruction;
-        self.rd = ((self.instruction >> 7) & 0x01f) as usize;
-        self.rs1_address = ((self.instruction >> 15) & 0x01f) as usize;
-        self.rs2_address = ((self.instruction >> 20) & 0x01f) as usize;
-        self.pc = fetch.next_pc;
-    }
-
-    pub fn decode_instruction(&mut self, reg: &[i32; 32]) {
-        self.opcode = self.instruction & 0x7f;
-        self.funct3 = (self.instruction >> 12) & 0x07;
-        self.funct7 = self.instruction >> 25;
-        self.rd = ((self.instruction >> 7) & 0x01f) as usize;
-        self.rs1_address = ((self.instruction >> 15) & 0x01f) as usize;
-        self.rs2_address = ((self.instruction >> 20) & 0x01f) as usize;
-        self.rs1 = reg[self.rs1_address];
-        self.rs2 = reg[self.rs2_address];
-        self.imm3112 = (self.instruction >> 12) << 12;
-        self.imm110 = self.instruction >> 20;
-        self.shamt = (self.instruction >> 20) & 0x01f;
-        self.s_offset = get_s_offset(&self.instruction);
-        self.sb_offset = get_sb_offset(&self.instruction);
-        self.uj_offset = get_uj_offset(&self.instruction);
-        self.control = Control::compute_control(&self.opcode);
-    }
-
-    pub fn update(&mut self) {
-        self.next_instruction = self.instruction;
-        self.next_pc = self.pc;
-        self.next_opcode = self.opcode;
-        self.next_funct3 = self.funct3;
-        self.next_funct7 = self.funct7;
-        self.next_rd = self.rd;
-        self.next_rs1 = self.rs1;
-        self.next_rs2 = self.rs2;
-        self.next_rs1_address = self.rs1_address;
-        self.next_rs2_address = self.rs2_address;
-        self.next_imm3112 = self.imm3112;
-        self.next_imm110 = self.imm110;
-        self.next_shamt = self.shamt;
-        self.next_s_offset = self.s_offset;
-        self.next_sb_offset = self.sb_offset;
-        self.next_uj_offset = self.uj_offset;
-        self.next_control = self.control;
-    }
-
-    pub fn print_state(&self, instruction_string: &String) {
-        println!("DECODE STAGE");
-        println!("Program counter: {}", self.pc);
-        println!("Instruction: {}", instruction_string);
-        println!();
-    }
-}
-
-impl Default for Decode {
+impl Default for Decoding {
     fn default() -> Self {
         Self {
-            instruction: Default::default(),
-            next_instruction: Default::default(),
-            pc: Default::default(),
-            next_pc: Default::default(),
-            opcode: Default::default(),
-            funct3: Default::default(),
-            funct7: Default::default(),
-            rd: Default::default(),
-            rs1: Default::default(),
-            rs2: Default::default(),
-            rs1_address: Default::default(),
-            rs2_address: Default::default(),
-            imm3112: Default::default(),
-            imm110: Default::default(),
-            shamt: Default::default(),
-            s_offset: Default::default(),
-            sb_offset: Default::default(),
-            uj_offset: Default::default(),
-            control: Control::default(),
-            next_opcode: Default::default(),
-            next_funct3: Default::default(),
-            next_funct7: Default::default(),
-            next_rd: Default::default(),
-            next_rs1: Default::default(),
-            next_rs2: Default::default(),
-            next_rs1_address: Default::default(),
-            next_rs2_address: Default::default(),
-            next_imm3112: Default::default(),
-            next_imm110: Default::default(),
-            next_shamt: Default::default(),
-            next_s_offset: Default::default(),
-            next_sb_offset: Default::default(),
-            next_uj_offset: Default::default(),
-            next_control: Control::default(),
+            opcode: 0,
+            funct3: 0,
+            funct7: 0,
+            rs1: 0,
+            rs2: 0,
+            imm3112: 0,
+            imm110: 0,
+            shamt: 0,
+            s_offset: 0,
+            sb_offset: 0,
+            uj_offset: 0,
         }
     }
 }
 
-fn get_uj_offset(instruction: &i32) -> i32 {
+pub fn update_register(if_id: &mut IFID, id_ex: &mut IDEX, reg: &[i32; 32]) {
+    id_ex.instruction = if_id.instruction;
+    id_ex.pc = if_id.pc;
+    id_ex.rd = ((if_id.instruction >> 7) & 0x01f) as usize;
+    id_ex.rs1 = ((if_id.instruction >> 15) & 0x01f) as usize;
+    id_ex.rs2 = ((if_id.instruction >> 20) & 0x01f) as usize;
+    id_ex.decoding = decode_instruction(&if_id.instruction, &id_ex.rs1, &id_ex.rs2, reg);
+    id_ex.control = Control::compute_control(&id_ex.decoding.opcode);
+}
+
+pub fn decode_instruction(
+    instruction: &i32,
+    rs1_address: &usize,
+    rs2_address: &usize,
+    reg: &[i32; 32],
+) -> Decoding {
+    Decoding {
+        opcode: instruction & 0x7f,
+        funct3: (instruction >> 12) & 0x07,
+        funct7: instruction >> 25,
+        rs1: reg[*rs1_address],
+        rs2: reg[*rs2_address],
+        imm3112: (instruction >> 12) << 12,
+        imm110: instruction >> 20,
+        shamt: (instruction >> 20) & 0x01f,
+        s_offset: s_offset(&instruction),
+        sb_offset: sb_offset(&instruction),
+        uj_offset: uj_offset(&instruction),
+    }
+}
+
+fn uj_offset(instruction: &i32) -> i32 {
     let bit20: i32 = (instruction >> 31) << 20; // 20
     let bit101: i32 = ((instruction >> 21) & 0x3ff) << 1; // 10 9 8 7 6 5 4 3 2 1
     let bit1912: i32 = instruction & 0xff000; // 19 18 17 16 15 14 13 12
@@ -146,7 +74,7 @@ fn get_uj_offset(instruction: &i32) -> i32 {
     ((bit101 | bit1912) | bit11) | bit20
 }
 
-fn get_sb_offset(instruction: &i32) -> i32 {
+fn sb_offset(instruction: &i32) -> i32 {
     let bit11 = (instruction & 0x80) << 4; // 11
     let bit12 = (instruction >> 31) << 12; // 12
     let bit41 = ((instruction >> 8) & 0x0f) << 1; // 4 3 2 1
@@ -154,7 +82,7 @@ fn get_sb_offset(instruction: &i32) -> i32 {
     ((bit41 | bit105) | bit11) | bit12
 }
 
-fn get_s_offset(instruction: &i32) -> i32 {
+fn s_offset(instruction: &i32) -> i32 {
     let bit40 = (instruction >> 7) & 0x1f;
     let bit115 = (instruction >> 25) << 5;
     bit40 | bit115
