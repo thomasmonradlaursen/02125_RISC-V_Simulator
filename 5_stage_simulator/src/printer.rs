@@ -268,3 +268,10 @@ pub fn print_registers_not_zero(registers: &[i32; 32]) {
     }
     println!();
 }
+
+pub fn print_program_info(filename: &String, program_len: &usize) {
+    println!("Acorn - RISC-V Pipeline Simulator");
+    println!("Binary from file: {}", filename);
+    println!("Length of binary: {}", program_len);
+    println!();
+}

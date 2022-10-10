@@ -1,4 +1,5 @@
 // Pipeline stages
+pub mod counter;
 pub mod fetch;
 pub mod decode;
 pub mod execute;

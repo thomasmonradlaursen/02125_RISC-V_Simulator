@@ -1,8 +1,9 @@
 use crate::{
     control::Control,
-    registers::{IDEX, IFID},
+    registers::{IFID, IDEX}
 };
 
+#[derive(Debug, Clone, Copy)]
 pub struct Decoding {
     pub opcode: i32,
     pub funct3: i32,
@@ -35,14 +36,24 @@ impl Default for Decoding {
     }
 }
 
-pub fn update_register(if_id: &mut IFID, id_ex: &mut IDEX, reg: &[i32; 32]) {
-    id_ex.instruction = if_id.instruction;
-    id_ex.pc = if_id.pc;
-    id_ex.rd = ((if_id.instruction >> 7) & 0x01f) as usize;
-    id_ex.rs1 = ((if_id.instruction >> 15) & 0x01f) as usize;
-    id_ex.rs2 = ((if_id.instruction >> 20) & 0x01f) as usize;
-    id_ex.decoding = decode_instruction(&if_id.instruction, &id_ex.rs1, &id_ex.rs2, reg);
-    id_ex.control = Control::compute_control(&id_ex.decoding.opcode);
+pub fn update_for_execution(decode: &mut IDEX, execute: &mut IDEX) {
+    execute.instruction = decode.instruction;
+    execute.pc = decode.pc;
+    execute.rd = decode.rd;
+    execute.rs1 = decode.rs1;
+    execute.rs2 = decode.rs2;
+    execute.control = decode.control;
+    execute.decoding = decode.decoding;
+}
+
+pub fn decode_to_register(decode_a: &mut IFID, decode_b: &mut IDEX, reg: &[i32; 32]) {
+    decode_b.instruction = decode_a.instruction;
+    decode_b.pc = decode_a.pc;
+    decode_b.rd = ((decode_a.instruction >> 7) & 0x01f) as usize;
+    decode_b.rs1 = ((decode_a.instruction >> 15) & 0x01f) as usize;
+    decode_b.rs2 = ((decode_a.instruction >> 20) & 0x01f) as usize;
+    decode_b.decoding = decode_instruction(&decode_a.instruction, &decode_b.rs1, &decode_b.rs2, reg);
+    decode_b.control = Control::compute_control(&decode_b.decoding.opcode);
 }
 
 pub fn decode_instruction(

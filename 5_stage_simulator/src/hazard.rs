@@ -1,106 +1,45 @@
 use crate::{
-    control::{Control, Fields},
-    decode::Decode,
-    execute::Execute,
-    mem_access::MemoryAccess,
-    writeback::Writeback,
+    registers::{EXMEM, IDEX, MEMWB},
 };
 
-pub struct HazardDetectionUnit {
-    pub id_ex_fields: Fields,
-    pub ex_mem_fields: Fields,
-    pub mem_wb_fields: Fields,
-    pub ex_mem_control: Control,
-    pub mem_wb_control: Control,
-}
-
-impl Default for HazardDetectionUnit {
-    fn default() -> Self {
-        Self {
-            id_ex_fields: Fields::default(),
-            ex_mem_fields: Fields::default(),
-            mem_wb_fields: Fields::default(),
-            ex_mem_control: Control::default(),
-            mem_wb_control: Control::default(),
+pub fn detect_hazard(id_ex: &mut IDEX, ex_mem: &EXMEM, mem_wb: &MEMWB, stall: &mut bool) {
+    println!("Hazard detection:");
+    if ex_mem.rd != 0 {
+        if ex_mem.rd == id_ex.rs1 {
+            println!(
+                "Memory access - rd: {}, Execute - rs1: {}",
+                ex_mem.rd, id_ex.rs1
+            );
+            clear_decode(id_ex, stall);
+        }
+        if ex_mem.rd == id_ex.rs2 {
+            println!(
+                "Memory access - rd: {}, Execute - rs2: {}",
+                ex_mem.rd, id_ex.rs2
+            );
+            clear_decode(id_ex, stall);
         }
     }
+    if mem_wb.rd != 0 {
+        if mem_wb.rd == id_ex.rs1 {
+            println!(
+                "Writeback - rd: {}, Execute - rs1: {}",
+                mem_wb.rd, id_ex.rs1
+            );
+            clear_decode(id_ex, stall);
+        }
+        if mem_wb.rd == id_ex.rs2 {
+            println!(
+                "Writeback - rd: {}, Execute - rs2: {}",
+                ex_mem.rd, id_ex.rs2
+            );
+            clear_decode(id_ex, stall);
+        }
+    }
+    println!();
 }
 
-impl HazardDetectionUnit {
-    pub fn initialize_fields(
-        &mut self,
-        execute: &Decode,
-        mem_access: &Execute,
-        writeback: &MemoryAccess,
-    ) {
-        self.id_ex_fields
-            .set_fields(execute.rd, execute.rs1_address, execute.rs2_address);
-        self.ex_mem_fields.set_fields(
-            mem_access.rd,
-            mem_access.rs1_address,
-            mem_access.rs2_address,
-        );
-        self.mem_wb_fields
-            .set_fields(writeback.rd, writeback.rs1_address, writeback.rs2_address);
-    }
-
-    pub fn detect_hazard(&self, decode: &mut Decode, stall: &mut bool) {
-        println!("HAZARD DETECTION UNIT:");
-        if self.ex_mem_fields.rd != 0 {
-            if self.ex_mem_fields.rd == self.id_ex_fields.rs1 {
-                println!(
-                    "Memory access - rd: {}, Execute - rs1: {}",
-                    self.ex_mem_fields.rd, self.id_ex_fields.rs1
-                );
-                clear_decode(decode, stall);
-            }
-            if self.ex_mem_fields.rd == self.id_ex_fields.rs2 {
-                println!(
-                    "Memory access - rd: {}, Execute - rs2: {}",
-                    self.ex_mem_fields.rd, self.id_ex_fields.rs2
-                );
-                clear_decode(decode, stall);
-            }
-        }
-        if self.mem_wb_fields.rd != 0 {
-            if self.mem_wb_fields.rd == self.id_ex_fields.rs1 {
-                println!(
-                    "Writeback - rd: {}, Execute - rs1: {}",
-                    self.mem_wb_fields.rd, self.id_ex_fields.rs1
-                );
-                clear_decode(decode, stall);
-            }
-            if self.mem_wb_fields.rd == self.id_ex_fields.rs2 {
-                println!(
-                    "Writeback - rd: {}, Execute - rs2: {}",
-                    self.ex_mem_fields.rd, self.id_ex_fields.rs2
-                );
-                clear_decode(decode, stall);
-            }
-        }
-        println!();
-    }
-
-    pub fn print_values(&self) {
-        println!("Hazard values of fields:");
-        println!(
-            "Ex - rd: {}, rs1: {}, rs2: {}",
-            self.id_ex_fields.rd, self.id_ex_fields.rs1, self.id_ex_fields.rs2
-        );
-        println!(
-            "Mem - rd: {}, rs1: {}, rs2: {}",
-            self.ex_mem_fields.rd, self.ex_mem_fields.rs1, self.ex_mem_fields.rs2
-        );
-        println!(
-            "Wb - rd: {}, rs1: {}, rs2: {}",
-            self.mem_wb_fields.rd, self.mem_wb_fields.rs1, self.mem_wb_fields.rs2
-        );
-        println!();
-    }
-}
-
-pub fn clear_decode(decode: &mut Decode, stall: &mut bool) {
-    decode.flush();
-    decode.next_instruction = 0x3000;
+pub fn clear_decode(id_ex: &mut IDEX, stall: &mut bool) {
+    id_ex.instruction = 0x3000;
     *stall = true;
 }

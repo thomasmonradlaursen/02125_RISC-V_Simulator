@@ -8,12 +8,6 @@ pub struct Control {
     pub branch: bool,
 }
 
-pub struct Fields {
-    pub rs1: usize,
-    pub rs2: usize, 
-    pub rd: usize,
-}
-
 impl Default for Control {
     fn default() -> Self {
         Self {
@@ -24,12 +18,6 @@ impl Default for Control {
             mem_to_reg: Default::default(),
             branch: Default::default(),
         }
-    }
-}
-
-impl Default for Fields {
-    fn default() -> Self {
-        Self { rs1: 0, rs2: 0, rd: 0 }
     }
 }
 
@@ -130,13 +118,5 @@ impl Control {
                 ..Default::default()
             },
         }
-    }
-}
-
-impl Fields {
-    pub fn set_fields(&mut self, rd: usize, rs1: usize, rs2: usize) {
-        self.rd = rd;
-        self.rs1 = rs1;
-        self.rs2 = rs2;
     }
 }
