@@ -1,11 +1,11 @@
-use crate::registers::{PC, IFID};
+use crate::registers::{IFID};
 
-pub fn fetch_to_register(fetch_a: &mut PC, fetch_b: &mut IFID, mem: &[u8], program_len: &usize) {
-    if fetch_a.pc < *program_len {
-    fetch_b.instruction = fetch_instruction(mem);
-    fetch_b.pc = fetch_a.pc;
+pub fn fetch_to_register(pc: &mut usize, fetch: &mut IFID, mem: &[u8], program_len: &usize) {
+    if *pc <= *program_len {
+    fetch.instruction = fetch_instruction(mem);
+    fetch.pc = *pc;
     } else {
-        fetch_b.instruction = 0x2000;
+        fetch.instruction = 0x2000;
     }
 }
 

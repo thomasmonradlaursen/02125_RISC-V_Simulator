@@ -1,10 +1,5 @@
 use crate::{control::Control, decode::Decoding, execute::Computation, mem_access::MemoryResult, printer};
 
-pub struct PCReg {
-    pub pc: PC,
-    pub fetch: PC,
-}
-
 pub struct IFIDReg {
     pub fetch: IFID,
     pub decode: IFID,
@@ -25,10 +20,6 @@ pub struct MEMWBReg {
     pub wb: MEMWB,
 }
 
-pub struct PC {
-    pub instruction: i32,
-    pub pc: usize,
-}
 
 pub struct IFID {
     pub instruction: i32,
@@ -63,15 +54,6 @@ pub struct MEMWB {
     pub rs2: usize,
     pub control: Control,
     pub mem_result: MemoryResult,
-}
-
-impl Default for PC {
-    fn default() -> Self {
-        Self {
-            instruction: 0,
-            pc: 0,
-        }
-    }
 }
 
 impl Default for IFID {
@@ -125,50 +107,68 @@ impl Default for MEMWB {
     }
 }
 
-impl PC {
-    pub fn print_state(&self) {
-        println!("Program counter register");
-        println!("Instruction: {}", printer::to_assembly(&self.instruction));
-        println!("Program counter: {}", self.pc);
+impl IFIDReg {
+    pub fn print_fetch(&self) {
+        println!("IFID: Fetch");
+        println!("Instruction: {}", printer::to_assembly(&self.fetch.instruction));
+        println!("Program counter: {}", self.fetch.pc);
+        println!();
+    }
+    pub fn print_decode(&self) {
+        println!("IFID: Decode");
+        println!("Instruction: {}", printer::to_assembly(&self.decode.instruction));
+        println!("Program counter: {}", self.decode.pc);
         println!();
     }
 }
 
-impl IFID {
-    pub fn print_state(&self) {
-        println!("Fetch/decode register");
-        println!("Instruction: {}", printer::to_assembly(&self.instruction));
-        println!("Program counter: {}", self.pc);
+impl IDEXReg {
+    pub fn print_decode(&self) {
+        println!("IDEX: Decode");
+        println!("Instruction: {}", printer::to_assembly(&self.decode.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.decode.pc, self.decode.rd, self.decode.rs1, self.decode.rs2);
+        println!("Decoding: {:?}", self.decode.decoding);
+        println!();
+    }
+    pub fn print_execute(&self) {
+        println!("IDEX: Execute");
+        println!("Instruction: {}", printer::to_assembly(&self.execute.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.execute.pc, self.execute.rd, self.execute.rs1, self.execute.rs2);
+        println!("Decoding: {:?}", self.execute.decoding);
         println!();
     }
 }
 
-impl IDEX {
-    pub fn print_state(&self) {
-        println!("Decode/execute register");
-        println!("Instruction: {}", printer::to_assembly(&self.instruction));
-        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.pc, self.rd, self.rs1, self.rs2);
-        println!("Decoding: {:?}", self.decoding);
+impl EXMEMReg {
+    pub fn print_execute(&self) {
+        println!("EXMEM: Execute");
+        println!("Instruction: {}", printer::to_assembly(&self.execute.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.execute.pc, self.execute.rd, self.execute.rs1, self.execute.rs2);
+        println!("Computation: {:?}", self.execute.computation);
+        println!();
+    }
+    pub fn print_mem(&self) {
+        println!("EXMEM: Memory");
+        println!("Instruction: {}", printer::to_assembly(&self.mem.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.mem.pc, self.mem.rd, self.mem.rs1, self.mem.rs2);
+        println!("Computation: {:?}", self.mem.computation);
         println!();
     }
 }
 
-impl EXMEM {
-    pub fn print_state(&self) {
-        println!("Execute/memory register");
-        println!("Instruction: {}", printer::to_assembly(&self.instruction));
-        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.pc, self.rd, self.rs1, self.rs2);
-        println!("Computation: {:?}", self.computation);
+impl MEMWBReg {
+    pub fn print_mem(&self) {
+        println!("MEMWB: Memory");
+        println!("Instruction: {}", printer::to_assembly(&self.mem.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.mem.pc, self.mem.rd, self.mem.rs1, self.mem.rs2);
+        println!("Memory result: {:?}", self.mem.mem_result);
         println!();
     }
-}
-
-impl MEMWB {
-    pub fn print_state(&self) {
-        println!("Memory/writeback register");
-        println!("Instruction: {}", printer::to_assembly(&self.instruction));
-        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.pc, self.rd, self.rs1, self.rs2);
-        println!("Memory result: {:?}", self.mem_result);
+    pub fn print_wb(&self) {
+        println!("MEMWB: Writeback");
+        println!("Instruction: {}", printer::to_assembly(&self.wb.instruction));
+        println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.wb.pc, self.wb.rd, self.wb.rs1, self.wb.rs2);
+        println!("Memory result: {:?}", self.wb.mem_result);
         println!();
     }
 }
