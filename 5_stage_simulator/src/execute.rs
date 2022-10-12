@@ -255,7 +255,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         0x67 => match execute_a.decoding.funct3 {
             0x00 => {
                 computation.result = execute_a.pc as i32 + 4;
-               * pc_src = (execute_a.decoding.rs1 + execute_a.decoding.imm110) as usize;
+                *pc_src = (execute_a.decoding.rs1 + execute_a.decoding.imm110) as usize;
                 flush_and_branch(fetch, decode, branch);
                 //self.reg_write = true;
             }
@@ -263,7 +263,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         },
         0x6F => {
             computation.result = execute_a.pc as i32 + 4;
-            *pc_src += execute_a.decoding.uj_offset as usize;
+            *pc_src = execute_a.pc + execute_a.decoding.uj_offset as usize;
             flush_and_branch(fetch, decode, branch);
             //self.reg_write = true;
         }

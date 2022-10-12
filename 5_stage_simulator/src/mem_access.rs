@@ -48,7 +48,7 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
             }
             0x02 => {
                 // LW - Load word
-                memory_result.read_mem = i32::from_be_bytes([
+                memory_result.read_mem = i32::from_le_bytes([
                     mem[computation.result as usize],
                     mem[computation.result as usize + 1],
                     mem[computation.result as usize + 2],

@@ -1,7 +1,7 @@
 use crate::registers::{MEMWB};
 
-pub fn writeback(wb: &MEMWB, reg: &mut [i32; 32], running: &mut bool) {
-    if wb.mem_result.alu_result == -1 {
+pub fn writeback(wb: &MEMWB, reg: &mut [i32; 32], running: &mut bool, program_len: &usize) {
+    if !(wb.pc < *program_len) {
         *running = false;
     }
     if wb.control.mem_to_reg {

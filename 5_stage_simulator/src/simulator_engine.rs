@@ -122,7 +122,7 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         );
 
         mem_access::memory_to_register(&mut ex_mem.mem, &mut mem_wb.mem, mem);
-        writeback::writeback(&mem_wb.wb, reg, &mut running);
+        writeback::writeback(&mem_wb.wb, reg, &mut running, program_len);
 
         // Update register values for next iteration
         increment_program_counter(&mut pc, &pc_src, &stall);
