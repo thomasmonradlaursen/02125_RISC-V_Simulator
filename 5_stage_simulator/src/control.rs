@@ -26,7 +26,7 @@ impl Control {
         match opcode {
             // Load instructions
             0x03 => Control {
-                reg_write: true,
+                reg_write: false,
                 alu_src: false,
                 mem_read: true,
                 mem_write: false,

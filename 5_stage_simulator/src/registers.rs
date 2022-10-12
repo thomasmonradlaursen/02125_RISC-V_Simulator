@@ -162,6 +162,7 @@ impl MEMWBReg {
         println!("Instruction: {}", printer::to_assembly(&self.mem.instruction));
         println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.mem.pc, self.mem.rd, self.mem.rs1, self.mem.rs2);
         println!("Memory result: {:?}", self.mem.mem_result);
+        println!("Control: {:?}", self.mem.control);
         println!();
     }
     pub fn print_wb(&self) {
@@ -169,6 +170,7 @@ impl MEMWBReg {
         println!("Instruction: {}", printer::to_assembly(&self.wb.instruction));
         println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.wb.pc, self.wb.rd, self.wb.rs1, self.wb.rs2);
         println!("Memory result: {:?}", self.wb.mem_result);
+        println!("Control: {:?}", self.wb.control);
         println!();
     }
 }

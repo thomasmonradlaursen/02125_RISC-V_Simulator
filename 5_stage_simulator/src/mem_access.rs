@@ -44,7 +44,7 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
             0x01 => {
                 // LH - Load halfword
                 memory_result.read_mem =
-                    (i16::from_be_bytes([mem[computation.result as usize], mem[computation.result as usize + 1]])) as i32;
+                    (i16::from_le_bytes([mem[computation.result as usize], mem[computation.result as usize + 1]])) as i32;
             }
             0x02 => {
                 // LW - Load word
@@ -62,25 +62,25 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
             0x05 => {
                 // LHU - Load halfword unsigned
                 memory_result.read_mem =
-                    (u16::from_be_bytes([mem[computation.result as usize], mem[computation.result as usize + 1]])) as i32;
+                    (u16::from_le_bytes([mem[computation.result as usize], mem[computation.result as usize + 1]])) as i32;
             }
             _ => (),
         },
         0x23 => match computation.mem_funct3 {
             0x00 => {
                 // SB - Store byte
-                let bytes = i32::to_be_bytes(computation.carry);
+                let bytes = i32::to_le_bytes(computation.carry);
                 mem[computation.result as usize] = bytes[0];
             }
             0x01 => {
                 // SH - Store halfword
-                let bytes = i32::to_be_bytes(computation.carry);
+                let bytes = i32::to_le_bytes(computation.carry);
                 mem[computation.result as usize] = bytes[0];
                 mem[computation.result as usize + 1] = bytes[1];
             }
             0x02 => {
                 // SW - Store word
-                let bytes = i32::to_be_bytes(computation.carry);
+                let bytes = i32::to_le_bytes(computation.carry);
                 mem[computation.result as usize] = bytes[0];
                 mem[computation.result as usize + 1] = bytes[1];
                 mem[computation.result as usize + 2] = bytes[2];

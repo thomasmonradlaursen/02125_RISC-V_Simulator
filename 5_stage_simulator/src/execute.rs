@@ -139,14 +139,14 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x01 => {
                 computation.result = execute_a.decoding.rs1 + execute_a.decoding.s_offset;
-                computation.result = execute_a.decoding.rs2;
+                computation.carry = execute_a.decoding.rs2;
                 computation.mem_opcode = execute_a.decoding.opcode;
                 computation.mem_funct3 = execute_a.decoding.funct3;
                 //self.reg_write = false;
             }
             0x02 => {
                 computation.result = execute_a.decoding.rs1 + execute_a.decoding.s_offset;
-                computation.result = execute_a.decoding.rs2;
+                computation.carry = execute_a.decoding.rs2;
                 computation.mem_opcode = execute_a.decoding.opcode;
                 computation.mem_funct3 = execute_a.decoding.funct3;
                 //self.reg_write = false;

@@ -98,15 +98,15 @@ pub fn to_assembly(instruction: &i32) -> String {
         0x23 => match funct3 {
             0x00 => {
                 let offset = s_format(&instruction);
-                return format!("SB x{}, {}(x{})", rd, offset, rs1);
+                return format!("SB x{}, {}(x{})", rs2, offset, rs1);
             }
             0x01 => {
                 let offset = s_format(&instruction);
-                return format!("SH x{}, {}(x{})", rd, offset, rs1);
+                return format!("SH x{}, {}(x{})", rs2, offset, rs1);
             }
             0x02 => {
                 let offset = s_format(&instruction);
-                return format!("SW x{}, {}(x{})", rd, offset, rs1);
+                return format!("SW x{}, {}(x{})", rs2, offset, rs1);
             }
             unimplemented => return format!(
                 "Funct3 {:#02x} for opcode {:#02x} not implemented...",
