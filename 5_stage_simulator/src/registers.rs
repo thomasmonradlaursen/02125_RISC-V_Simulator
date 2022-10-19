@@ -157,6 +157,7 @@ impl EXMEMReg {
         println!("Instruction: {}", printer::to_assembly(&self.mem.instruction));
         println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.mem.pc, self.mem.rd, self.mem.rs1, self.mem.rs2);
         println!("Computation: {:?}", self.mem.computation);
+        println!("{:?}", self.mem.control);
         println!();
     }
 }

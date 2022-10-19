@@ -8,5 +8,9 @@ fn main() {
         "true" => true,
         _ => false,
     };
-    simulator_engine::run_simulation(&filename, true, hazard);
+    let forward = match args[3].as_str() {
+        "true" => true,
+        _ => false,
+    };
+    simulator_engine::run_simulation(&filename, true, hazard, forward);
 }

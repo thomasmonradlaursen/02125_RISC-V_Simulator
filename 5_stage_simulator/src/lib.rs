@@ -9,7 +9,7 @@ pub mod writeback;
 pub mod registers;
 pub mod control;
 pub mod hazard;
-pub mod foward;
+pub mod forward;
 
 // Engine
 pub mod simulator_engine;

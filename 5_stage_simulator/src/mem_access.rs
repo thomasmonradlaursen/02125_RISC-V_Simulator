@@ -39,6 +39,8 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
         0x03 => match computation.mem_funct3 {
             0x00 => {
                 // LB - Load byte
+                println!("LOAD BYTE - Address: {}", computation.result);
+                println!("LOAD BYTE - Address as usize: {}", computation.result as usize);
                 memory_result.read_mem = (mem[computation.result as usize] as i8) as i32;
             }
             0x01 => {

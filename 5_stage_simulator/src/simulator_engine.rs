@@ -1,3 +1,4 @@
+use crate::forward;
 use crate::hazard;
 use crate::registers::{EXMEMReg, IDEXReg, IFIDReg, MEMWBReg};
 use crate::registers::{EXMEM, IDEX, IFID, MEMWB};
@@ -5,14 +6,14 @@ use crate::{decode, execute, fetch, mem_access, printer, writeback};
 use std::fs;
 use std::io;
 
-pub fn run_simulation(filename: &String, stepwise: bool, hazard: bool) -> [i32; 32] {
+pub fn run_simulation(filename: &String, stepwise: bool, hazard: bool, forward: bool) -> [i32; 32] {
     let mut reg: [i32; 32] = [0; 32];
     let mut mem: [u8; 1048576] = [0; 1048576];
     let program_len = read_bytes_to_mem(filename, &mut mem);
 
     printer::print_program_info(filename, &program_len);
 
-    run_engine(&mut reg, &mut mem, &program_len, stepwise, hazard);
+    run_engine(&mut reg, &mut mem, &program_len, stepwise, hazard, forward);
 
     printer::print_registers(&reg);
 
@@ -25,6 +26,7 @@ fn run_engine(
     program_len: &usize,
     stepwise: bool,
     enable_hazard: bool,
+    enable_forwarding: bool,
 ) {
     let mut if_id: IFIDReg = IFIDReg {
         fetch: IFID {
@@ -68,6 +70,9 @@ fn run_engine(
     let mut pc_src: usize;
     let mut cycles: u32 = 0;
     let mut pc: usize = 0;
+    let mut forward_a: u8 = 0;
+    let mut forward_b: u8 = 0;
+    let mut forward_c: u8 = 0;
 
     while running {
         branch = false;
@@ -117,12 +122,19 @@ fn run_engine(
         // Hazard
         if enable_hazard {
             hazard::load_use_hazard(&if_id.decode, &id_ex.execute, &mut stall);
-            hazard::load_use_hazard_extended(&if_id.decode, &ex_mem.mem, &mut stall);
-            hazard::ex_hazard(&id_ex.decode, &ex_mem.execute, &mut stall);
-            hazard::mem_hazard(&id_ex.decode, &ex_mem.execute, &mem_wb.mem, &mut stall);
+            if !enable_forwarding {
+                hazard::load_use_hazard_extended(&if_id.decode, &ex_mem.mem, &mut stall);
+                hazard::ex_hazard(&id_ex.decode, &ex_mem.execute, &mut stall);
+                hazard::mem_hazard(&id_ex.decode, &ex_mem.execute, &mem_wb.mem, &mut stall);
+            }
         }
 
-        printer::print_registers_not_zero(reg);
+        // Forwarding
+        if enable_forwarding {
+            forward::ex_forward(&id_ex.decode, &ex_mem.execute, &mut forward_a);
+            forward::mem_hazard(&id_ex.decode, &mem_wb.mem, &forward_a, &mut forward_b);
+            forward::load_use_forward(&if_id.decode, &ex_mem.mem, &mut forward_c);
+        }
 
         // Update register values for next iteration
         increment_program_counter(&mut pc, &pc_src, &stall);
@@ -132,6 +144,13 @@ fn run_engine(
         decode::update_for_execution(&mut id_ex.decode, &mut id_ex.execute, &reg);
         execute::update_for_memory(&mut ex_mem.execute, &mut ex_mem.mem);
         mem_access::update_for_writeback(&mut mem_wb.mem, &mut mem_wb.wb);
+
+        // Update based on forwarding
+        forward::update_forward_a(&mut id_ex.execute, &ex_mem.execute, &forward_a);
+        forward::update_forward_b(&mut id_ex.execute, &mem_wb.mem, &forward_b);
+        forward::update_forward_c(&mut id_ex.execute, &mem_wb.mem, &forward_c);
+
+        printer::print_registers_not_zero(reg);
 
         if stall {
             id_ex.execute = Default::default();
