@@ -24,6 +24,8 @@ pub struct MEMWBReg {
 pub struct IFID {
     pub instruction: i32,
     pub pc: usize,
+    pub rs1: usize,
+    pub rs2: usize,
 }
 
 pub struct IDEX {
@@ -61,6 +63,8 @@ impl Default for IFID {
         Self {
             instruction: 0,
             pc: 0,
+            rs1: 0,
+            rs2: 0,
         }
     }
 }
@@ -111,13 +115,13 @@ impl IFIDReg {
     pub fn print_fetch(&self) {
         println!("IFID: Fetch");
         println!("Instruction: {}", printer::to_assembly(&self.fetch.instruction));
-        println!("Program counter: {}", self.fetch.pc);
+        println!("Program counter: {}, rs1: {}, rs2:{}", self.fetch.pc, self.fetch.rs1, self.fetch.rs2);
         println!();
     }
     pub fn print_decode(&self) {
         println!("IFID: Decode");
         println!("Instruction: {}", printer::to_assembly(&self.decode.instruction));
-        println!("Program counter: {}", self.decode.pc);
+        println!("Program counter: {}, rs1: {}, rs2:{}", self.decode.pc, self.decode.rs1, self.decode.rs2);
         println!();
     }
 }
@@ -135,6 +139,7 @@ impl IDEXReg {
         println!("Instruction: {}", printer::to_assembly(&self.execute.instruction));
         println!("Program counter: {}, rd: {}, rs1: {}, rs2:{}", self.execute.pc, self.execute.rd, self.execute.rs1, self.execute.rs2);
         println!("Decoding: {:?}", self.execute.decoding);
+        println!("{:?}", self.execute.control);
         println!();
     }
 }

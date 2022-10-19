@@ -19,7 +19,13 @@ pub fn run_simulation(filename: &String, stepwise: bool, hazard: bool) -> [i32; 
     reg
 }
 
-fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize, stepwise: bool, hazard: bool) {
+fn run_engine(
+    reg: &mut [i32; 32],
+    mem: &mut [u8; 1048576],
+    program_len: &usize,
+    stepwise: bool,
+    enable_hazard: bool,
+) {
     let mut if_id: IFIDReg = IFIDReg {
         fetch: IFID {
             ..Default::default()
@@ -71,7 +77,6 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         let next_instruction = &mem[(pc)..(pc + 4)];
 
         println!("Cycle number: {}", cycles);
-        printer::print_registers_not_zero(reg);
 
         // Print state of pipeline registers
         println!(
@@ -84,25 +89,18 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
         ex_mem.print_mem();
         mem_wb.print_wb();
 
-        if stepwise {
-            let mut s = String::new();
-            io::stdin().read_line(&mut s).expect("Did not read");
-        }
-
         // Handle hazards
+
+        // Hazard detection should properly overwrite any current result in decode
 
         // Run pipeline
 
-        fetch::fetch_to_register(&mut pc, &mut if_id.fetch, &next_instruction, program_len);
-        decode::decode_to_register(&mut if_id.decode, &mut id_ex.decode, reg);
-
-        hazard::detect_hazard(
-            &hazard,
-            &mut id_ex.decode,
-            &mut ex_mem.execute,
-            &mut mem_wb.mem,
-            &mut stall,
-        );
+        if !stall {
+            fetch::fetch_to_register(&mut pc, &mut if_id.fetch, &next_instruction, program_len);
+            decode::decode_to_register(&mut if_id.decode, &mut id_ex.decode, reg);
+        } else {
+            println!("Stalling fetch and decode");
+        }
 
         execute::execute_to_register(
             &mut id_ex.execute,
@@ -113,31 +111,45 @@ fn run_engine(reg: &mut [i32; 32], mem: &mut [u8; 1048576], program_len: &usize,
             &mut id_ex.decode,
         );
 
-        hazard::detect_hazard(
-            &hazard,
-            &mut id_ex.decode,
-            &mut ex_mem.execute,
-            &mut mem_wb.mem,
-            &mut stall,
-        );
-
         mem_access::memory_to_register(&mut ex_mem.mem, &mut mem_wb.mem, mem);
         writeback::writeback(&mem_wb.wb, reg, &mut running, program_len);
+
+        // Hazard
+        if enable_hazard {
+            hazard::load_use_hazard(&if_id.decode, &id_ex.execute, &mut stall);
+            hazard::load_use_hazard_extended(&if_id.decode, &ex_mem.mem, &mut stall);
+            hazard::ex_hazard(&id_ex.decode, &ex_mem.execute, &mut stall);
+            hazard::mem_hazard(&id_ex.decode, &ex_mem.execute, &mem_wb.mem, &mut stall);
+        }
+
+        printer::print_registers_not_zero(reg);
 
         // Update register values for next iteration
         increment_program_counter(&mut pc, &pc_src, &stall);
         if !stall {
             fetch::update_for_decode(&mut if_id.fetch, &mut if_id.decode);
         }
-        decode::update_for_execution(&mut id_ex.decode, &mut id_ex.execute);
+        decode::update_for_execution(&mut id_ex.decode, &mut id_ex.execute, &reg);
         execute::update_for_memory(&mut ex_mem.execute, &mut ex_mem.mem);
         mem_access::update_for_writeback(&mut mem_wb.mem, &mut mem_wb.wb);
+
+        if stall {
+            id_ex.execute = Default::default();
+            id_ex.execute.instruction = 0x3000;
+        }
 
         reg[0] = 0;
 
         cycles += 1;
+
+        if stepwise {
+            let mut s = String::new();
+            io::stdin().read_line(&mut s).expect("Did not read");
+        }
+
+        println!("______________________________________");
     }
-    println!("Execution completed.");
+    println!("Execution terminated.");
 }
 
 fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {

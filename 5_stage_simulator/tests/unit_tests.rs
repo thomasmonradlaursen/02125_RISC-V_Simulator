@@ -276,3 +276,10 @@ const HAZARD: bool = true;
         let expected: [i32; 32] = [0,0,0,0,0,251723760,251721983,0,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         assert!(reg.iter().zip(expected.iter()).all(|(a,b)| a == b));
     }
+
+    #[test]
+    fn load_use() {
+        let reg = simulator_engine::run_simulation(&String::from("instruction_tests/test_load_use.bin"), STEPWISE, HAZARD);
+        let expected: [i32; 32] = [0,1,2,1,3,-1,0,0,0,0,0,0,0,0,0,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        assert!(reg.iter().zip(expected.iter()).all(|(a,b)| a == b));
+    }

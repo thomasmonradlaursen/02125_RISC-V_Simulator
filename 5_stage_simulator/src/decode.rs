@@ -36,7 +36,7 @@ impl Default for Decoding {
     }
 }
 
-pub fn update_for_execution(decode: &mut IDEX, execute: &mut IDEX) {
+pub fn update_for_execution(decode: &mut IDEX, execute: &mut IDEX, reg: &[i32; 32]) {
     execute.instruction = decode.instruction;
     execute.pc = decode.pc;
     execute.rd = decode.rd;
@@ -44,6 +44,8 @@ pub fn update_for_execution(decode: &mut IDEX, execute: &mut IDEX) {
     execute.rs2 = decode.rs2;
     execute.control = decode.control;
     execute.decoding = decode.decoding;
+    execute.decoding.rs1 = reg[decode.rs1];
+    execute.decoding.rs2 = reg[decode.rs2];
 }
 
 pub fn decode_to_register(decode_a: &mut IFID, decode_b: &mut IDEX, reg: &[i32; 32]) {
