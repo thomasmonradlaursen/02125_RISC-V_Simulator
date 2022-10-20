@@ -131,6 +131,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         }
         0x23 => match execute_a.decoding.funct3 {
             0x00 => {
+                // SB - Store byte
                 computation.result = execute_a.decoding.rs1 + execute_a.decoding.s_offset;
                 computation.carry = execute_a.decoding.rs2;
                 computation.mem_opcode = execute_a.decoding.opcode;
@@ -138,6 +139,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
                 //self.reg_write = false;
             }
             0x01 => {
+                // SH - Store halfword
                 computation.result = execute_a.decoding.rs1 + execute_a.decoding.s_offset;
                 computation.carry = execute_a.decoding.rs2;
                 computation.mem_opcode = execute_a.decoding.opcode;
@@ -145,6 +147,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
                 //self.reg_write = false;
             }
             0x02 => {
+                // SW - Store word
                 computation.result = execute_a.decoding.rs1 + execute_a.decoding.s_offset;
                 computation.carry = execute_a.decoding.rs2;
                 computation.mem_opcode = execute_a.decoding.opcode;

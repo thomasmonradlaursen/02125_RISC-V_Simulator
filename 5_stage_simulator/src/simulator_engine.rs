@@ -72,7 +72,6 @@ fn run_engine(
     let mut pc: usize = 0;
     let mut forward_a: u8 = 0;
     let mut forward_b: u8 = 0;
-    let mut forward_c: u8 = 0;
 
     while running {
         branch = false;
@@ -131,9 +130,10 @@ fn run_engine(
 
         // Forwarding
         if enable_forwarding {
-            forward::ex_forward(&id_ex.decode, &ex_mem.execute, &mut forward_a);
-            forward::mem_hazard(&id_ex.decode, &mem_wb.mem, &forward_a, &mut forward_b);
-            forward::load_use_forward(&if_id.decode, &ex_mem.mem, &mut forward_c);
+            forward::reset_multiplexers(&mut forward_a, &mut forward_b);
+            forward::ex_forward(&id_ex.decode, &ex_mem.execute, &mut forward_a, &mut forward_b);
+            forward::mem_hazard(&id_ex.decode, &mem_wb.mem, &mut forward_a, &mut forward_b);
+            forward::load_use_forward(&if_id.decode, &ex_mem.mem, &mut forward_a, &mut forward_b);
         }
 
         // Update register values for next iteration
@@ -146,9 +146,10 @@ fn run_engine(
         mem_access::update_for_writeback(&mut mem_wb.mem, &mut mem_wb.wb);
 
         // Update based on forwarding
-        forward::update_forward_a(&mut id_ex.execute, &ex_mem.execute, &forward_a);
-        forward::update_forward_b(&mut id_ex.execute, &mem_wb.mem, &forward_b);
-        forward::update_forward_c(&mut id_ex.execute, &mem_wb.mem, &forward_c);
+        if enable_forwarding {
+            forward::update_forward_a(&mut id_ex.execute, &ex_mem.execute, &mem_wb.mem, &forward_a);
+            forward::update_forward_b(&mut id_ex.execute, &ex_mem.execute, &mem_wb.mem, &forward_b);
+        }
 
         printer::print_registers_not_zero(reg);
 
