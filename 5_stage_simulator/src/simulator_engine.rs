@@ -111,8 +111,6 @@ fn run_engine(
             &mut ex_mem.execute,
             &mut pc_src,
             &mut branch,
-            &mut if_id.fetch,
-            &mut id_ex.decode,
         );
 
         mem_access::memory_to_register(&mut ex_mem.mem, &mut mem_wb.mem, mem);
@@ -121,6 +119,7 @@ fn run_engine(
         // Hazard
         if enable_hazard {
             hazard::load_use_hazard(&if_id.decode, &id_ex.execute, &mut stall);
+            hazard::control_hazard(&mut if_id.fetch, &mut id_ex.decode, &branch);
             if !enable_forwarding {
                 hazard::load_use_hazard_extended(&if_id.decode, &ex_mem.mem, &mut stall);
                 hazard::ex_hazard(&id_ex.decode, &ex_mem.execute, &mut stall);
@@ -131,7 +130,12 @@ fn run_engine(
         // Forwarding
         if enable_forwarding {
             forward::reset_multiplexers(&mut forward_a, &mut forward_b);
-            forward::ex_forward(&id_ex.decode, &ex_mem.execute, &mut forward_a, &mut forward_b);
+            forward::ex_forward(
+                &id_ex.decode,
+                &ex_mem.execute,
+                &mut forward_a,
+                &mut forward_b,
+            );
             forward::mem_hazard(&id_ex.decode, &mem_wb.mem, &mut forward_a, &mut forward_b);
             forward::load_use_forward(&if_id.decode, &ex_mem.mem, &mut forward_a, &mut forward_b);
         }

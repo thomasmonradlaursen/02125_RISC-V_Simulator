@@ -1,4 +1,4 @@
-use crate::{registers::{IDEX, EXMEM, IFID}};
+use crate::{registers::{IDEX, EXMEM}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Computation {
@@ -24,17 +24,17 @@ pub fn update_for_memory(execute: &mut EXMEM, mem: &mut EXMEM) {
     mem.computation = execute.computation;
 }
 
-pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool, fetch: &mut IFID, decode: &mut IDEX) {
+pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool) {
     execute_b.instruction = execute_a.instruction;
     execute_b.pc = execute_a.pc;
     execute_b.rd = execute_a.rd;
     execute_b.rs1 = execute_a.rs1;
     execute_b.rs2 = execute_a.rs2;
-    execute_b.computation = execute_instruction(pc_src, execute_a, branch, fetch, decode);
+    execute_b.computation = execute_instruction(pc_src, execute_a, branch);
     execute_b.control = execute_a.control;
 }
 
-pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool, fetch: &mut IFID, decode: &mut IDEX) -> Computation {
+pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool) -> Computation {
     let mut computation = Computation{result: 0, carry: 0, mem_opcode: 0, mem_funct3: 0};
     match execute_a.decoding.opcode {
         0x00 => match execute_a.decoding.funct3 {
@@ -214,42 +214,42 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             0x00 => {
                 if execute_a.decoding.rs1 == execute_a.decoding.rs2 {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
             0x01 => {
                 if execute_a.decoding.rs1 != execute_a.decoding.rs2 {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
             0x04 => {
                 if execute_a.decoding.rs1 < execute_a.decoding.rs2 {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
             0x05 => {
                 if execute_a.decoding.rs1 >= execute_a.decoding.rs2 {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
             0x06 => {
                 if (execute_a.decoding.rs1 as u32) < (execute_a.decoding.rs2 as u32) {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
             0x07 => {
                 if (execute_a.decoding.rs1 as u32) >= (execute_a.decoding.rs2 as u32) {
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
-                    flush_and_branch(fetch, decode, branch);
+                    *branch = true;
                 }
                 //self.reg_write = false;
             }
@@ -259,7 +259,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             0x00 => {
                 computation.result = execute_a.pc as i32 + 4;
                 *pc_src = (execute_a.decoding.rs1 + execute_a.decoding.imm110) as usize;
-                flush_and_branch(fetch, decode, branch);
+                *branch = true;
                 //self.reg_write = true;
             }
             _ => (),
@@ -267,7 +267,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         0x6F => {
             computation.result = execute_a.pc as i32 + 4;
             *pc_src = execute_a.pc + execute_a.decoding.uj_offset as usize;
-            flush_and_branch(fetch, decode, branch);
+            *branch = true;
             //self.reg_write = true;
         }
         0x73 => {
@@ -278,12 +278,4 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         _ => (),
     }
     computation
-}
-
-fn flush_and_branch(fetch: &mut IFID, decode: &mut IDEX, branch: &mut bool) {
-    *fetch = IFID {..Default::default()};
-    fetch.instruction = 0x1000;
-    *decode = IDEX {..Default::default()};
-    decode.instruction = 0x1000;
-    *branch = true;
 }

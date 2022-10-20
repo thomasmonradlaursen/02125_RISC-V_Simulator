@@ -57,3 +57,18 @@ pub fn load_use_hazard_extended(decode: &IFID, mem: &EXMEM, stall: &mut bool) {
         *stall = true;
     }
 }
+
+pub fn control_hazard(fetch: &mut IFID, decode: &mut IDEX, branch: &bool) {
+    println!("Control hazard:");
+    if *branch {
+        println!("Flushing fetch and decode");
+        *fetch = IFID {
+            ..Default::default()
+        };
+        fetch.instruction = 0x1000;
+        *decode = IDEX {
+            ..Default::default()
+        };
+        decode.instruction = 0x1000;
+    }
+}
