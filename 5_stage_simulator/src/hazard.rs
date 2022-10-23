@@ -36,13 +36,15 @@ pub fn mem_hazard(decode: &IDEX, execute: &EXMEM, mem: &MEMWB, stall: &mut bool)
 
 pub fn load_use_hazard(decode: &IFID, execute: &IDEX, stall: &mut bool) {
     println!("Load-use hazards:");
-    if execute.control.mem_read && (execute.rd == decode.rs1) {
-        println!("ID/EX rd: {} = IF/ID rs1: {}", execute.rd, decode.rs1);
-        *stall = true;
-    }
-    if execute.control.mem_read && (execute.rd == decode.rs2) {
-        println!("ID/EX rd: {} = IF/ID rs2: {}", execute.rd, decode.rs2);
-        *stall = true;
+    if execute.control.mem_read && execute.control.reg_write {
+        if execute.rd == decode.rs1 {
+            println!("ID/EX rd: {} = IF/ID rs1: {}", execute.rd, decode.rs1);
+            *stall = true;
+        }
+        if execute.rd == decode.rs2 {
+            println!("ID/EX rd: {} = IF/ID rs2: {}", execute.rd, decode.rs2);
+            *stall = true;
+        }
     }
 }
 
