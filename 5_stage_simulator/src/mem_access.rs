@@ -34,6 +34,9 @@ pub fn memory_to_register(mem_a: &mut EXMEM, mem_b: &mut MEMWB, mem: &mut [u8; 1
 }
 
 pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult {
+    // NOTE: Handling of access outside the array must be handled.
+    // Solution could be to make user aware of problem, and then do nothing.
+    
     let mut memory_result = MemoryResult{ read_mem: 0, alu_result: computation.result, alu_carry: computation.carry };
     match computation.mem_opcode {
         0x03 => match computation.mem_funct3 {

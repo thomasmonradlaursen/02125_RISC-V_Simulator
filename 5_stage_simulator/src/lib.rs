@@ -16,3 +16,4 @@ pub mod simulator_engine;
 
 // Utility
 pub mod printer;
+pub mod documentation;

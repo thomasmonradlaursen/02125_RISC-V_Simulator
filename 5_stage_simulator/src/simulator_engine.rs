@@ -5,6 +5,7 @@ use crate::registers::{EXMEM, IDEX, IFID, MEMWB};
 use crate::{decode, execute, fetch, mem_access, printer, writeback};
 use std::fs;
 use std::io;
+use std::io::prelude::*;
 
 pub fn run_simulation(filename: &String, stepwise: bool, hazard: bool, forward: bool) -> [i32; 32] {
     let mut reg: [i32; 32] = [0; 32];
@@ -12,6 +13,8 @@ pub fn run_simulation(filename: &String, stepwise: bool, hazard: bool, forward: 
     let program_len = read_bytes_to_mem(filename, &mut mem);
 
     printer::print_program_info(filename, &program_len);
+
+    write_information(filename);
 
     run_engine(&mut reg, &mut mem, &program_len, stepwise, hazard, forward);
 
@@ -173,6 +176,7 @@ fn run_engine(
 
         println!("______________________________________");
     }
+    write_result(&cycles, &enable_forwarding, &enable_hazard);
     println!("Execution terminated.");
 }
 
@@ -197,4 +201,38 @@ pub fn increment_program_counter(pc: &mut usize, pc_src: &usize, stall: &bool) {
     if !*stall {
         *pc = *pc_src;
     }
+}
+
+fn write_result(cycles: &u32, forwarding: &bool, hazard: &bool) {
+    
+    let c = format!("Number of cycles: {}\n", cycles);
+    let h = format!("Hazard detection: {}\n", match hazard {
+        true => "Enabled",
+        false => "Disabled"
+    });
+    let d = format!("Data forwarding: {}\n", match forwarding {
+        true => "Enabled",
+        false => "Disabled"
+    });
+    let contents = format!("{}{}{}", c, h, d);
+    let mut file = fs::OpenOptions::new().write(true)
+    .append(true)
+    .open("test_results.txt")
+    .unwrap();
+
+    write!(file, "{}", contents).unwrap();
+}
+
+fn write_information(filename: &String) {
+    let mut file = fs::OpenOptions::new().write(true)
+    .append(true)
+    .open("test_results.txt")
+    .unwrap();
+
+    let string = match filename.split_once("/") {
+        Some(a) => a,
+        None => ("", ""),
+    };
+
+    writeln!(file, "Filename: {}", string.1).unwrap();
 }
