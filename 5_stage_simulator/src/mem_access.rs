@@ -34,10 +34,16 @@ pub fn memory_to_register(mem_a: &mut EXMEM, mem_b: &mut MEMWB, mem: &mut [u8; 1
 }
 
 pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult {
-    // NOTE: Handling of access outside the array must be handled.
-    // Solution could be to make user aware of problem, and then do nothing.
-    
     let mut memory_result = MemoryResult{ read_mem: 0, alu_result: computation.result, alu_carry: computation.carry };
+
+    // NOTE: Handling of access outside the array must be handled.
+    // Solution: Warn user aware of problem, and then do nothing for this stage.
+    if computation.result < 0 || computation.result > mem.len() as i32 {
+        println!("WARNING: {} is out of bounds with the current memory size of {}.", computation.result, mem.len());
+        println!("WARNING: Memory cannot be access for this reason, neither for load or store.");
+        println!("WARNING: The simulator will continue as if is this stage did nothing.");
+    }
+
     match computation.mem_opcode {
         0x03 => match computation.mem_funct3 {
             0x00 => {

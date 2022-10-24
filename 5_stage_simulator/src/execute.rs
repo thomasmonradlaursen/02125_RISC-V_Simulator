@@ -277,5 +277,14 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         }
         _ => (),
     }
+
+    // NOTE: Hardwired 0 in x0 needs to be preserved.
+    // User warning could be issued here.
+    if execute_a.decoding.opcode != 0x23 || execute_a.decoding.opcode != 0x63 {
+        println!("WARNING: Register x0 must be hardwired to 0.");
+        println!("WARNING: Currently, rd = {} tries to overwrite x0.", execute_a.rd);
+        println!("WARNING: Therefore, the result of ALU will be overwritten to 0.");
+        computation.result = 0;
+    }
     computation
 }
