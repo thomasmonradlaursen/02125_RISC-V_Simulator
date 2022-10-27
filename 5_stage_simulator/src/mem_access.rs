@@ -42,6 +42,7 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
         println!("WARNING: {} is out of bounds with the current memory size of {}.", computation.result, mem.len());
         println!("WARNING: Memory cannot be access for this reason, neither for load or store.");
         println!("WARNING: The simulator will continue as if is this stage did nothing.");
+        return memory_result;
     }
 
     match computation.mem_opcode {

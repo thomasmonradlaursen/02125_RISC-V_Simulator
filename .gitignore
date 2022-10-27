@@ -19,5 +19,6 @@ Cargo.lock
 # Local tests
 /5_stage_simulator/instruction_tests/
 /5_stage_simulator/cae_tests/
+/5_stage_simulator/results/
 /isa_simulator/instruction_tests/
 /isa_simulator/cae_tests/
