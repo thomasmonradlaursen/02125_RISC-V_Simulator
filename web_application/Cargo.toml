@@ -1,0 +1,26 @@
+[package]
+name = "web_application"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "simulator"
+path = "src/simulator_engine/lib.rs"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[dependencies]
+js-sys = "0.3"
+yew = "0.19" 
+gloo-file = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["File"]
+
+[profile.dev]
+overflow-checks = false

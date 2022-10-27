@@ -178,14 +178,7 @@ fn run_engine(
 }
 
 fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
-    let mut content: Vec<u8> = vec![];
-    while content.len() <= 0 {
-        let file = fs::read(filename);
-        match file {
-            Ok(raw_bytes) => content = raw_bytes,
-            Err(err) => println!("{:?}", err),
-        }
-    }
+    let content: Vec<u8> = fs::read(filename).unwrap();
     let mut count = 0;
     while count < content.len() {
         mem[count] = content[count];
