@@ -15,3 +15,7 @@ When working with the most significant bits of immidiates, remember to include t
 
 ### Datapath implementations
 See page 294 and 318 in Computer Organization and Design
+
+### Web application
+Note: The default stack size of a web application is 256 KB according to https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/iis/site-behavior-performance/default-maximum-stack-size-thread
+Overall, it should properly be considered if the memory should be less.

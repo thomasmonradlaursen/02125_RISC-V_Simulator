@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use mylib::{simulator_engine, simulator_engine::SimulatorEngine};
 
 use web_sys::{Event, HtmlInputElement};
 use yew::{html, html::TargetCast, Component, Context, Html};
@@ -8,12 +8,14 @@ use gloo_file::File;
 
 pub enum Msg {
     LoadedBytes(String, Vec<u8>),
-    Files(Vec<File>),
+    Files(File),
+    RunSimulator,
 }
 
 pub struct Model {
-    readers: HashMap<String, FileReader>,
-    files: Vec<String>,
+    reader: Option<FileReader>,
+    file: (String, Vec<u8>),
+    engine: SimulatorEngine,
 }
 
 impl Component for Model {
@@ -22,77 +24,80 @@ impl Component for Model {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            readers: HashMap::default(),
-            files: vec![],
+            reader: Default::default(),
+            file: (String::new(), vec![]),
+            engine: Default::default(),
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::LoadedBytes(file_name, data) => {
-                let info = format!("file_name: {}, length: {}, data: {:?}", file_name, data.len(), data);
-                self.files.push(info);
-                self.readers.remove(&file_name);
+                self.file = (file_name, data);
                 true
             }
             Msg::Files(file) => {
-                    let file_name = file[0].name();
-                    let task = {
-                        let file_name = file_name.clone();
-                        let link = ctx.link().clone();
+                let file_name = file.name();
+                let task = {
+                    let file_name = file_name.clone();
+                    let link = ctx.link().clone();
 
-                        gloo_file::callbacks::read_as_bytes(&file[0], move |res| {
-                            link.send_message(Msg::LoadedBytes(
-                                file_name,
-                                res.expect("failed to read file"),
-                            ))
-                        })
-                    };
-                    self.readers.insert(file_name, task);
-                    true
-                }
+                    gloo_file::callbacks::read_as_bytes(&file, move |res| {
+                        link.send_message(Msg::LoadedBytes(
+                            file_name,
+                            res.expect("failed to read file"),
+                        ))
+                    })
+                };
+                self.reader = Some(task);
+                true
             }
-        }
-        fn view(&self, ctx: &Context<Self>) -> Html {
-            html! {
-                <div>
-                    <div>
-                        <p>{ "Choose file for simulator" }</p>
-                        <input type="file" multiple=true onchange={ctx.link().callback(move |e: Event| {
-                                let mut result = Vec::new();
-                                let input: HtmlInputElement = e.target_unchecked_into();
-    
-                                if let Some(files) = input.files() {
-                                    let files = js_sys::try_iter(&files)
-                                        .unwrap()
-                                        .unwrap()
-                                        .map(|v| web_sys::File::from(v.unwrap()))
-                                        .map(File::from);
-                                    result.extend(files);
-                                }
-                                Msg::Files(result)
-                            })}
-                        />
-                    </div>
-                    //<p> { for self.files.iter().map(|f| Self::view_file(f)) } </p>
-                    <p> { Self::view_some(self.files.get(0))} </p>
-                </div>
+            Msg::RunSimulator => {
+                self.engine.run_engine(&self.file.1.len(), false, true, true);
+                true
             }
+            /*Msg::RunSimulator(simulator_engine, file) => {
+                true
+            }*/
         }
     }
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        html! {
+            <>
+            <div>
+                <div>
+                    <p>{ "Choose file for simulator" }</p>
+                    <input type="file" onchange={ctx.link().callback(move |e: Event| {
+                            let mut result = Vec::new();
+                            let input: HtmlInputElement = e.target_unchecked_into();
 
+                            if let Some(files) = input.files() {
+                                let files = js_sys::try_iter(&files)
+                                    .unwrap()
+                                    .unwrap()
+                                    .map(|v| web_sys::File::from(v.unwrap()))
+                                    .map(File::from);
+                                result.extend(files);
+                            }
+                            Msg::Files(match result.get(0) {Some(file) => file.clone(), None => File::new("", "")})
+                        })}
+                    />
+                </div>
+                <p> { Self::view_some(&self.file.0)} </p>
+            </div>
+            <div>
+            <p>{ "Run simulator" }</p>
+            <button onclick={ctx.link().callback(|_| Msg::RunSimulator)}>{ "Run simulation" }</button>
+            <p>{ format!("{} {} {:?}", self.file.0, self.engine.cycles, self.engine.reg) }</p>
+            </div>
+            </>
+        }
+    }
+}
 
 impl Model {
-    fn view_file(data: &str) -> Html {
-        html! {
-            <p>{ data }</p>
-        }
-    }
-    fn view_some(data: Option<&String>) -> Html {
-        match data {
-            Some(index) => html! {<p>{index}</p> },
-            None => html! {<p>{"No index"}</p> },
-        }
+    fn view_some(data: &String) -> Html {
+        html! {<p>{data}</p> }
     }
 }
 

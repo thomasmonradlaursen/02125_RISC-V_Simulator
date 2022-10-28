@@ -6,12 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "simulator"
-path = "src/simulator_engine/lib.rs"
-
-[[bin]]
-name = "main"
-path = "src/main.rs"
+name = "mylib"
+path = "src/lib.rs"
 
 [dependencies]
 js-sys = "0.3"

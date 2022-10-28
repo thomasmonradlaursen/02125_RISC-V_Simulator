@@ -1,14 +1,13 @@
+
 use crate::forward;
 use crate::hazard;
 use crate::registers::{EXMEMReg, IDEXReg, IFIDReg, MEMWBReg};
 use crate::{decode, execute, fetch, mem_access, printer, writeback};
-use std::fs;
-use std::io;
 
 pub struct SimulatorEngine {
     // Registers and memory
     pub reg: [i32; 32],
-    pub mem: [u8; 1048576],
+    pub mem: [u8; 262144],
     // Pipeline register
     pub if_id: IFIDReg,
     pub id_ex: IDEXReg,
@@ -30,7 +29,7 @@ impl Default for SimulatorEngine {
     fn default() -> Self {
         Self {
             reg: [0; 32],
-            mem: [0; 1048576],
+            mem: [0; 262144],
             if_id: IFIDReg {
                 fetch: Default::default(),
                 decode: Default::default(),
@@ -200,42 +199,47 @@ impl SimulatorEngine {
 
             self.cycles += 1;
 
-            if stepwise {
+            /*if stepwise {
                 let mut s = String::new();
                 io::stdin().read_line(&mut s).expect("Did not read");
-            }
+            }*/
 
             println!("______________________________________");
         }
         println!("Execution terminated.");
     }
-
 }
 
-fn read_bytes_to_mem(filename: &String, mem: &mut [u8; 1048576]) -> usize {
-    let content: Vec<u8> = fs::read(filename).unwrap();
+
+pub fn read_bytes_to_mem(file: &(String, Vec<u8>), mem: &mut [u8]) -> usize {
     let mut count = 0;
-    while count < content.len() {
-        mem[count] = content[count];
+    while count < file.1.len() {
+        mem[count] = file.1[count];
         count = count + 1;
     }
-    content.len()
+    file.1.len()
 }
 
-fn increment_program_counter(pc: &mut usize, pc_src: &usize, stall: &bool) {
+pub fn increment_program_counter(pc: &mut usize, pc_src: &usize, stall: &bool) {
     if !*stall {
         *pc = *pc_src;
     }
 }
 
-pub fn run_simulation(filename: &String, simulator_engine: &mut SimulatorEngine, stepwise: bool, hazard: bool, forward: bool) {
 
-    let program_len = read_bytes_to_mem(filename, &mut simulator_engine.mem);
+pub fn run_simulation(
+    file: &(String, Vec<u8>),
+    simulator_engine: &mut SimulatorEngine,
+    stepwise: bool,
+    hazard: bool,
+    forward: bool,
+) {
+    let program_len = read_bytes_to_mem(file, &mut simulator_engine.mem);
 
-    printer::print_program_info(filename, &program_len);
+    printer::print_program_info(&file.0, &program_len);
 
     simulator_engine.run_engine(&program_len, stepwise, hazard, forward);
 
     printer::print_registers(&simulator_engine.reg);
-
 }
+

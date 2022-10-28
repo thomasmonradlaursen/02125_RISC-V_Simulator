@@ -23,7 +23,7 @@ pub fn update_for_writeback(mem: &mut MEMWB, wb: &mut MEMWB) {
     wb.mem_result = mem.mem_result;
 }
 
-pub fn memory_to_register(mem_a: &mut EXMEM, mem_b: &mut MEMWB, mem: &mut [u8; 1048576]) {
+pub fn memory_to_register(mem_a: &mut EXMEM, mem_b: &mut MEMWB, mem: &mut [u8]) {
     mem_b.instruction = mem_a.instruction;
     mem_b.pc = mem_a.pc;
     mem_b.rd = mem_a.rd;
