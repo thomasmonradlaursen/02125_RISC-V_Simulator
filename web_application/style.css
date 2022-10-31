@@ -1,0 +1,14 @@
+.center {
+    text-align: center;
+    border: 3px solid red;
+}
+
+.center div {
+    padding: 10pt;
+    text-align: center;
+    border: 3px solid green;
+}
+
+.center button {
+    margin: 5pt;
+}

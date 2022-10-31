@@ -15,13 +15,13 @@ pub fn to_assembly(instruction: &i32) -> String {
         // TODO - Fix to something nicer...
         0x00 => match funct3 {
             0x00 => {
-                return format!("empty");
+                return format!("");
             }
             0x01 => {
                 return format!("flush");
             }
             0x02 => {
-                return format!("end of file");
+                return format!("");
             }
             0x03 => {
                 return format!("stall");

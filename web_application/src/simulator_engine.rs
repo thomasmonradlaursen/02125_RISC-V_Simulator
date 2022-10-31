@@ -23,6 +23,7 @@ pub struct SimulatorEngine {
     pub pc_src: usize,
     pub branch: bool,
     pub running: bool,
+    pub program_len: usize,
 }
 
 impl Default for SimulatorEngine {
@@ -54,12 +55,13 @@ impl Default for SimulatorEngine {
             pc_src: 0,
             branch: false,
             running: true,
+            program_len: 0,
         }
     }
 }
 
 impl SimulatorEngine {
-    pub fn run_engine(&mut self, program_len: &usize, stepwise: bool, hazard: bool, forward: bool) {
+    pub fn run_engine(&mut self, stepwise: bool, hazard: bool, forward: bool) {
         while self.running {
             // Reset for next cycle
             self.branch = false;
@@ -88,7 +90,7 @@ impl SimulatorEngine {
                     &mut self.pc,
                     &mut self.if_id.fetch,
                     &next_instruction,
-                    program_len,
+                    &self.program_len,
                 );
                 decode::decode_to_register(
                     &mut self.if_id.decode,
@@ -115,7 +117,7 @@ impl SimulatorEngine {
                 &self.mem_wb.wb,
                 &mut self.reg,
                 &mut self.running,
-                program_len,
+                &self.program_len,
             );
 
             // Hazard
@@ -162,7 +164,7 @@ impl SimulatorEngine {
             }
 
             // Update register values for next iteration
-            increment_program_counter(&mut self.pc, &self.pc_src, &self.stall);
+            Self::increment_program_counter(self);
             if !self.stall {
                 fetch::update_for_decode(&mut self.if_id.fetch, &mut self.if_id.decode);
             }
@@ -199,47 +201,28 @@ impl SimulatorEngine {
 
             self.cycles += 1;
 
-            /*if stepwise {
-                let mut s = String::new();
-                io::stdin().read_line(&mut s).expect("Did not read");
-            }*/
+            if stepwise {
+                break;
+            }
 
             println!("______________________________________");
         }
         println!("Execution terminated.");
     }
-}
 
-
-pub fn read_bytes_to_mem(file: &(String, Vec<u8>), mem: &mut [u8]) -> usize {
-    let mut count = 0;
-    while count < file.1.len() {
-        mem[count] = file.1[count];
-        count = count + 1;
+    pub fn read_bytes_to_mem(&mut self, data: &Vec<u8>) {
+        let mut count = 0;
+        while count < data.len() {
+            self.mem[count] = data[count];
+            count = count + 1;
+        }
+        self.program_len = data.len();
     }
-    file.1.len()
-}
-
-pub fn increment_program_counter(pc: &mut usize, pc_src: &usize, stall: &bool) {
-    if !*stall {
-        *pc = *pc_src;
+    
+    pub fn increment_program_counter(&mut self) {
+        if !self.stall {
+            self.pc = self.pc_src;
+        }
     }
-}
-
-
-pub fn run_simulation(
-    file: &(String, Vec<u8>),
-    simulator_engine: &mut SimulatorEngine,
-    stepwise: bool,
-    hazard: bool,
-    forward: bool,
-) {
-    let program_len = read_bytes_to_mem(file, &mut simulator_engine.mem);
-
-    printer::print_program_info(&file.0, &program_len);
-
-    simulator_engine.run_engine(&program_len, stepwise, hazard, forward);
-
-    printer::print_registers(&simulator_engine.reg);
 }
 
