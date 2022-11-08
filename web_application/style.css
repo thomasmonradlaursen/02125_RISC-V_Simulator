@@ -1,3 +1,7 @@
+.container {
+    display: grid;
+}
+
 .center {
     text-align: center;
     border: 3px solid red;
@@ -11,4 +15,86 @@
 
 .center button {
     margin: 5pt;
+}
+
+.file_choose {
+    width: 10%;
+    float:inherit, left;
+}
+
+.left {
+    width: 30%;
+    float: right;
+}
+
+.item-a {
+    grid-column-start: 1;
+    grid-column-end: one;
+    grid-row-start: row1-start;
+    grid-row-end: 1;
+    border: 3px solid red;
+  }
+
+.item-b {
+    grid-column-start: 2;
+    grid-column-end: one;
+    grid-row-start: row1-start;
+    grid-row-end: 1;
+    border: 3px solid red;
+}
+
+.decode {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    grid-row-start: 2;
+    grid-row-end: 2;
+    border: 3px solid red;
+}
+
+.execute {
+    grid-column-start: 2;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 2;
+    border: 3px solid red;
+}
+
+.memory {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    grid-row-start: 3;
+    grid-row-end: 3;
+    border: 3px solid red;
+}
+
+.writeback {
+    grid-column-start: 2;
+    grid-column-end: 2;
+    grid-row-start: 3;
+    grid-row-end: 3;
+    border: 3px solid red;
+}
+
+.registers{
+    grid-column-start: 3;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 3;
+    border: 3pt solid rebeccapurple;
+    height: 100pt;
+    overflow-y: auto;
+}
+
+.instructions{
+    grid-column-start: 3;
+    grid-column-end: 3;
+    grid-row-start: 3;
+    grid-row-end: 4;
+    border: 3pt solid rebeccapurple;
+    height: 100pt;
+    overflow-y: auto;
+}
+
+.instructions td {
+    border: 1pt solid black;
 }

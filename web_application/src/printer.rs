@@ -1,6 +1,4 @@
-
 pub fn to_assembly(instruction: &i32) -> String {
-
     let opcode = instruction & 0x7f;
     let funct3 = (instruction >> 12) & 0x07;
     let funct7 = instruction >> 25;
@@ -26,12 +24,14 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x03 => {
                 return format!("stall");
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
-        }
-        
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
+        },
+
         0x03 => match funct3 {
             0x00 => {
                 return format!("LB x{}, {}(x{})", rd, imm110, rs1);
@@ -48,10 +48,12 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x05 => {
                 return format!("LHU x{}, {}(x{})", rd, imm110, rs1);
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x13 => match funct3 {
             0x00 => {
@@ -76,10 +78,12 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SRAI x{}, x{}, {}", rd, rs1, shamt);
                 }
-                unimplemented => return format!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
+                unimplemented => {
+                    return format!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    )
+                }
             },
             0x06 => {
                 return format!("ORI x{}, x{}, {}", rd, rs1, imm110);
@@ -87,10 +91,12 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("ANDI x{}, x{}, {}", rd, rs1, imm110);
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x17 => {
             return format!("AUIPC x{}, {}", rd, imm3112);
@@ -108,10 +114,12 @@ pub fn to_assembly(instruction: &i32) -> String {
                 let offset = s_format(&instruction);
                 return format!("SW x{}, {}(x{})", rs2, offset, rs1);
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x33 => match funct3 {
             0x00 => match funct7 {
@@ -121,10 +129,12 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SUB x{}, x{}, x{}", rd, rs1, rs2);
                 }
-                unimplemented => return format!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
+                unimplemented => {
+                    return format!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    )
+                }
             },
             0x01 => {
                 return format!("SLL x{}, x{}, x{}", rd, rs1, rs2);
@@ -145,10 +155,12 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SRA x{}, x{}, x{}", rd, rs1, rs2);
                 }
-                unimplemented => return format!(
-                    "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, funct3, opcode
-                ),
+                unimplemented => {
+                    return format!(
+                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
+                        unimplemented, funct3, opcode
+                    )
+                }
             },
             0x06 => {
                 return format!("OR x{}, x{}, x{}", rd, rs1, rs2);
@@ -156,10 +168,12 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("AND x{}, x{}, x{}", rd, rs1, rs2);
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x37 => {
             return format!("LUI x{}, {}", rd, imm3112);
@@ -183,19 +197,23 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x67 => match funct3 {
             0x00 => {
                 return format!("JALR x{}, x{}, {}", rd, rs1, imm110);
             }
-            unimplemented => return format!(
-                "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                unimplemented, opcode
-            ),
+            unimplemented => {
+                return format!(
+                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
+                    unimplemented, opcode
+                )
+            }
         },
         0x6F => {
             return format!("JAL x{}, {}", rd, uj_format(&instruction));
@@ -275,4 +293,15 @@ pub fn print_program_info(filename: &String, program_len: &usize) {
     println!("Binary from file: {}", filename);
     println!("Length of binary: {}", program_len);
     println!("______________________________________");
+}
+
+pub fn instructions_as_assembly(bytes: &Vec<u8>) -> Vec<String> {
+    let mut instructions: Vec<String> = vec![];
+    let mut i = 0;
+    while i < bytes.len() {
+        let bytes: [u8;4] = [bytes[i], bytes[i+1], bytes[i+2], bytes[i+3]];
+        instructions.push(to_assembly(&i32::from_le_bytes(bytes)));
+        i += 4;
+    }
+    instructions
 }

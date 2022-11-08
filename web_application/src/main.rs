@@ -63,9 +63,8 @@ impl Component for Model {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
-            <div class = "center">
-                <div>
-                    <p>{ "Choose file for simulator" }</p>
+            <div class = "container">
+                <div class = "item-a">
                     <input type = "file" onchange={ctx.link().callback(move |e: Event| {
                             let mut result = Vec::new();
                             let input: HtmlInputElement = e.target_unchecked_into();
@@ -81,21 +80,21 @@ impl Component for Model {
                         })}
                     />
                 </div>
-            <div>
-            <p>{ "Controls" }</p>
+            <div class = "item-b">
             <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
             <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
             <p>{ format!("Name of binary: {}", self.file.0) }</p>
             <p>{ format!("Length of program: {}", self.engine.program_len) }</p>
             </div>
-            <div>
+            <div class = "registers">
             <p>{ format!("Register values:")}</p>
-            <p>{ format!("{:?}", self.engine.reg)}</p>
+            {Self::display_registers(&self.engine.reg)}
             </div>
-            {Self::display_instruction(&String::from("Decode"), &printer::to_assembly(&self.engine.if_id.decode.instruction))}
-            {Self::display_instruction(&String::from("Execute"), &printer::to_assembly(&self.engine.id_ex.execute.instruction))}
-            {Self::display_instruction(&String::from("Memory access"), &printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
-            {Self::display_instruction(&String::from("Writeback"), &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
+            {Self::display_decode(&printer::to_assembly(&self.engine.if_id.decode.instruction))}
+            {Self::display_execute(&printer::to_assembly(&self.engine.id_ex.execute.instruction))}
+            {Self::display_mem(&printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
+            {Self::display_writeback(&printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
+            {Self::display_instructions(&self.file)}
             </div>
             </>
         }
@@ -103,13 +102,67 @@ impl Component for Model {
 }
 
 impl Model {
-    fn display_instruction(stage: &String, instruction: &String) -> Html {
+    fn display_decode(instruction: &String) -> Html {
         html!{
-            <div>
-                <p>{ format!("{}: {}", stage, instruction) }</p>
+            <div class = "decode">
+                <p>{ format!("Decode: {}", instruction) }</p>
             </div>
         }
     }
+    fn display_execute(instruction: &String) -> Html {
+        html!{
+            <div class = "execute">
+                <p>{ format!("Execute: {}", instruction) }</p>
+            </div>
+        }
+    }
+    fn display_mem(instruction: &String) -> Html {
+        html!{
+            <div class = "memory">
+                <p>{ format!("Memory access: {}", instruction) }</p>
+            </div>
+        }
+    }
+    fn display_writeback(instruction: &String) -> Html {
+        html!{
+            <div class = "writeback">
+                <p>{ format!("Writeback: {}", instruction) }</p>
+            </div>
+        }
+    }
+    fn display_instructions(file: &(String, Vec<u8>)) -> Html {
+        let instructions = printer::instructions_as_assembly(&file.1);
+        html!{
+        <div class = "instructions">
+            <table>
+            {
+                instructions.into_iter().map(|instruction| {
+                    html!{
+                        <tr>
+                            <td>{instruction}</td>
+                        </tr>
+                    }
+                }).collect::<Html>()
+            }
+            </table>
+        </div>
+        }
+    } 
+    fn display_registers(registers: &[i32; 32]) -> Html {
+        html!{
+            <table>
+            {
+                registers.into_iter().map(|register| {
+                    html!{
+                        <tr>
+                            <td>{register}</td>
+                        </tr>
+                    }
+                }).collect::<Html>()
+            }
+            </table>
+        }
+    } 
 }
 
 fn main() {
