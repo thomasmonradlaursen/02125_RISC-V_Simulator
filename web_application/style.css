@@ -1,100 +1,82 @@
 .container {
     display: grid;
-}
-
-.center {
+    grid-template-columns: 2fr 2fr 1fr 1fr;
+    grid-auto-rows: 100pt;
     text-align: center;
-    border: 3px solid red;
 }
 
-.center div {
-    padding: 10pt;
-    text-align: center;
-    border: 3px solid green;
-}
-
-.center button {
-    margin: 5pt;
-}
-
-.file_choose {
-    width: 10%;
-    float:inherit, left;
-}
-
-.left {
-    width: 30%;
-    float: right;
-}
-
-.item-a {
+.controls {
+    padding: 1em;
     grid-column-start: 1;
-    grid-column-end: one;
-    grid-row-start: row1-start;
-    grid-row-end: 1;
-    border: 3px solid red;
-  }
-
-.item-b {
-    grid-column-start: 2;
-    grid-column-end: one;
-    grid-row-start: row1-start;
-    grid-row-end: 1;
-    border: 3px solid red;
-}
-
-.decode {
-    grid-column-start: 1;
-    grid-column-end: 1;
-    grid-row-start: 2;
+    grid-column-end: 5;
+    grid-row-start: 1;
     grid-row-end: 2;
-    border: 3px solid red;
+    border: 3px solid blue;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 50pt;   
 }
 
-.execute {
-    grid-column-start: 2;
-    grid-column-end: 2;
-    grid-row-start: 2;
-    grid-row-end: 2;
-    border: 3px solid red;
-}
-
-.memory {
+.stages {
+    padding: 0.5em;
     grid-column-start: 1;
-    grid-column-end: 1;
-    grid-row-start: 3;
+    grid-column-end: 3;
+    grid-row-start: 2;
     grid-row-end: 3;
-    border: 3px solid red;
+    border: 3px solid blue;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 50pt;      
 }
 
-.writeback {
-    grid-column-start: 2;
-    grid-column-end: 2;
-    grid-row-start: 3;
-    grid-row-end: 3;
+.stages p {
+    border: 3px dotted black;
+    padding: 1em;
+    height: 25pt;    
+}
+
+.datapath {
     border: 3px solid red;
+    height: 50pt;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    grid-row-start: 3;
+    grid-row-end: 9;
+    height: 250pt;
 }
 
 .registers{
-    grid-column-start: 3;
-    grid-column-end: 3;
-    grid-row-start: 1;
-    grid-row-end: 3;
+    grid-column-start: 4;
+    grid-column-end: 5;
+    grid-row-start: 2;
+    grid-row-end: 9;
     border: 3pt solid rebeccapurple;
-    height: 100pt;
     overflow-y: auto;
+    height: 50%;
+}
+
+.registers table {
+    table-layout: fixed;
+    min-width: 150pt;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1em;
 }
 
 .instructions{
     grid-column-start: 3;
-    grid-column-end: 3;
-    grid-row-start: 3;
-    grid-row-end: 4;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 9;
     border: 3pt solid rebeccapurple;
-    height: 100pt;
     overflow-y: auto;
+    height: 50%;
 }
 
-.instructions td {
-    border: 1pt solid black;
+.instructions table {
+    table-layout: fixed;
+    min-width: 150pt;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1em;
 }

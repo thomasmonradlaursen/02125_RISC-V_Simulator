@@ -64,7 +64,7 @@ impl Component for Model {
         html! {
             <>
             <div class = "container">
-                <div class = "item-a">
+                <div class = "controls">
                     <input type = "file" onchange={ctx.link().callback(move |e: Event| {
                             let mut result = Vec::new();
                             let input: HtmlInputElement = e.target_unchecked_into();
@@ -79,22 +79,23 @@ impl Component for Model {
                             Msg::Files(match result.get(0) {Some(file) => file.clone(), None => File::new("", "")})
                         })}
                     />
+                    <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
+                    <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
                 </div>
-            <div class = "item-b">
-            <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
-            <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
-            <p>{ format!("Name of binary: {}", self.file.0) }</p>
-            <p>{ format!("Length of program: {}", self.engine.program_len) }</p>
-            </div>
             <div class = "registers">
             <p>{ format!("Register values:")}</p>
             {Self::display_registers(&self.engine.reg)}
             </div>
-            {Self::display_decode(&printer::to_assembly(&self.engine.if_id.decode.instruction))}
-            {Self::display_execute(&printer::to_assembly(&self.engine.id_ex.execute.instruction))}
-            {Self::display_mem(&printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
-            {Self::display_writeback(&printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
             {Self::display_instructions(&self.file)}
+            <div class="stages">
+            {Self::display_stage("Decode", &printer::to_assembly(&self.engine.if_id.decode.instruction))}
+            {Self::display_stage("Execute", &printer::to_assembly(&self.engine.id_ex.execute.instruction))}
+            {Self::display_stage("Memory access", &printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
+            {Self::display_stage("Writeback", &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
+            </div>
+            <div class="datapath">
+            <p>{"Datapath"}</p>
+            </div>
             </div>
             </>
         }
@@ -102,39 +103,17 @@ impl Component for Model {
 }
 
 impl Model {
-    fn display_decode(instruction: &String) -> Html {
+    fn display_stage(stage: &str, instruction: &String) -> Html {
         html!{
-            <div class = "decode">
-                <p>{ format!("Decode: {}", instruction) }</p>
-            </div>
-        }
-    }
-    fn display_execute(instruction: &String) -> Html {
-        html!{
-            <div class = "execute">
-                <p>{ format!("Execute: {}", instruction) }</p>
-            </div>
-        }
-    }
-    fn display_mem(instruction: &String) -> Html {
-        html!{
-            <div class = "memory">
-                <p>{ format!("Memory access: {}", instruction) }</p>
-            </div>
-        }
-    }
-    fn display_writeback(instruction: &String) -> Html {
-        html!{
-            <div class = "writeback">
-                <p>{ format!("Writeback: {}", instruction) }</p>
-            </div>
+            <p>{stage}<br/>{instruction}</p>
         }
     }
     fn display_instructions(file: &(String, Vec<u8>)) -> Html {
         let instructions = printer::instructions_as_assembly(&file.1);
         html!{
         <div class = "instructions">
-            <table>
+            <p>{String::from("Instructions")}</p>
+            <table border="1">
             {
                 instructions.into_iter().map(|instruction| {
                     html!{
@@ -150,7 +129,7 @@ impl Model {
     } 
     fn display_registers(registers: &[i32; 32]) -> Html {
         html!{
-            <table>
+            <table border = "1">
             {
                 registers.into_iter().map(|register| {
                     html!{
