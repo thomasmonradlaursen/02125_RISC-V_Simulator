@@ -88,6 +88,7 @@ impl Component for Model {
             </div>
             {Self::display_instructions(&self.file)}
             <div class="stages">
+            {Self::display_stage("Fetch", &printer::to_assembly(&self.engine.pc_instruction))}
             {Self::display_stage("Decode", &printer::to_assembly(&self.engine.if_id.decode.instruction))}
             {Self::display_stage("Execute", &printer::to_assembly(&self.engine.id_ex.execute.instruction))}
             {Self::display_stage("Memory access", &printer::to_assembly(&self.engine.ex_mem.mem.instruction))}

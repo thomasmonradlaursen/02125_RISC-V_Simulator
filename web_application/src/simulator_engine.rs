@@ -20,6 +20,7 @@ pub struct SimulatorEngine {
     // Control parameters
     pub cycles: u32,
     pub pc: usize,
+    pub pc_instruction: i32,
     pub pc_src: usize,
     pub branch: bool,
     pub running: bool,
@@ -52,6 +53,7 @@ impl Default for SimulatorEngine {
             forward_b: 0,
             cycles: 0,
             pc: 0,
+            pc_instruction: 0,
             pc_src: 0,
             branch: false,
             running: true,
@@ -73,6 +75,8 @@ impl SimulatorEngine {
             println!("Cycle number: {}", self.cycles);
 
             // Print state of pipeline registers
+            // NEEDS TO BE FIXED:
+            self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
             println!(
                 "Fetch:\nInstruction: {}\nPC: {}\n",
                 printer::to_assembly(&fetch::fetch_instruction(&next_instruction)),
@@ -217,6 +221,8 @@ impl SimulatorEngine {
             count = count + 1;
         }
         self.program_len = data.len();
+        // NEEDS TO BE FIXED:
+        self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
     }
     
     pub fn increment_program_counter(&mut self) {
