@@ -24,17 +24,17 @@ pub fn update_for_memory(execute: &mut EXMEM, mem: &mut EXMEM) {
     mem.computation = execute.computation;
 }
 
-pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool) {
+pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool, reg: &[i32;32], program_len: &usize) {
     execute_b.instruction = execute_a.instruction;
     execute_b.pc = execute_a.pc;
     execute_b.rd = execute_a.rd;
     execute_b.rs1 = execute_a.rs1;
     execute_b.rs2 = execute_a.rs2;
-    execute_b.computation = execute_instruction(pc_src, execute_a, branch);
+    execute_b.computation = execute_instruction(pc_src, execute_a, branch, reg, program_len);
     execute_b.control = execute_a.control;
 }
 
-pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool) -> Computation {
+pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool, reg: &[i32;32], program_len: &usize) -> Computation {
     let mut computation = Computation{result: 0, carry: 0, mem_opcode: 0, mem_funct3: 0};
     match execute_a.decoding.opcode {
         0x00 => match execute_a.decoding.funct3 {
@@ -271,9 +271,10 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             //self.reg_write = true;
         }
         0x73 => {
-            /*if reg[17] == 10 {
-                break;
-            }*/
+            if reg[17] == 10 {
+                *branch = true;
+                *pc_src = *program_len;
+            }
         }
         _ => (),
     }

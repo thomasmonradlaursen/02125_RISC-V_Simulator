@@ -110,6 +110,8 @@ impl SimulatorEngine {
                 &mut self.ex_mem.execute,
                 &mut self.pc_src,
                 &mut self.branch,
+                &self.reg,
+                &self.program_len,
             );
 
             mem_access::memory_to_register(
@@ -204,10 +206,14 @@ impl SimulatorEngine {
             }
 
             self.cycles += 1;
-
+            
+            // NEEDS TO BE FIXED:
+            self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
+            
             if stepwise {
                 break;
             }
+
 
             println!("______________________________________");
         }

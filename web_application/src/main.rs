@@ -10,6 +10,7 @@ pub enum Msg {
     LoadedBytes(String, Vec<u8>),
     Files(File),
     RunSimulator(bool),
+    Reset,
 }
 
 pub struct Model {
@@ -58,14 +59,19 @@ impl Component for Model {
                 self.engine.run_engine(stepwise, true, true);
                 true
             }
+            Msg::Reset => {
+                self.engine = Default::default();
+                self.engine.read_bytes_to_mem(&self.file.1);
+                true
+            }
         }
     }
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {    
         html! {
             <>
             <div class = "container">
                 <div class = "controls">
-                    <input type = "file" onchange={ctx.link().callback(move |e: Event| {
+                    <input lang="en" type = "file" onchange={ctx.link().callback(move |e: Event| {
                             let mut result = Vec::new();
                             let input: HtmlInputElement = e.target_unchecked_into();
                             if let Some(files) = input.files() {
@@ -81,6 +87,7 @@ impl Component for Model {
                     />
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
+                    <button onclick={ctx.link().callback(|_| Msg::Reset)}>{ "Reset" }</button>
                 </div>
             <div class = "registers">
             <p>{ format!("Register values:")}</p>
@@ -96,6 +103,7 @@ impl Component for Model {
             </div>
             <div class="datapath">
             <p>{"Datapath"}</p>
+            <canvas></canvas>
             </div>
             </div>
             </>
@@ -116,10 +124,11 @@ impl Model {
             <p>{String::from("Instructions")}</p>
             <table border="1">
             {
-                instructions.into_iter().map(|instruction| {
+                instructions.into_iter().enumerate().map(|(address, instruction)| {
                     html!{
                         <tr>
-                            <td>{instruction}</td>
+                            <td width="20%">{format!("{:04x}", address*4)}</td>
+                            <td width="80%">{instruction}</td>
                         </tr>
                     }
                 }).collect::<Html>()
@@ -132,11 +141,14 @@ impl Model {
         html!{
             <table border = "1">
             {
-                registers.into_iter().map(|register| {
+                registers.into_iter().enumerate().map(|(count, register)| {
                     html!{
+                        <>
                         <tr>
-                            <td>{register}</td>
+                            <td width="20%">{format!("x{}", count)}</td>
+                            <td width="80%">{register}</td>
                         </tr>
+                        </>
                     }
                 }).collect::<Html>()
             }
