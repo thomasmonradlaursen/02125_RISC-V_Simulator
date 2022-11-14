@@ -1,4 +1,5 @@
 use crate::{registers::{EXMEM, MEMWB}, execute::Computation};
+use gloo_dialogs;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MemoryResult {
@@ -39,9 +40,10 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation) -> MemoryResult 
     // NOTE: Handling of access outside the array must be handled.
     // Solution: Warn user aware of problem, and then do nothing for this stage.
     if computation.result < 0 || computation.result > mem.len() as i32 {
-        println!("WARNING: {} is out of bounds with the current memory size of {}.", computation.result, mem.len());
-        println!("WARNING: Memory cannot be access for this reason, neither for load or store.");
-        println!("WARNING: The simulator will continue as if is this stage did nothing.");
+        let mut message = format!("WARNING: {} is out of bounds with the current memory size of {}.\n", computation.result, mem.len());
+        message.push_str("WARNING: Memory cannot be access for this reason, neither for load or store.\n");
+        message.push_str("WARNING: The simulator will continue as if is this stage did nothing.");
+        gloo_dialogs::alert(&message[..]);
         return memory_result;
     }
 

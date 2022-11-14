@@ -1,9 +1,9 @@
-
 use crate::forward;
 use crate::hazard;
 use crate::registers::{EXMEMReg, IDEXReg, IFIDReg, MEMWBReg};
 use crate::{decode, execute, fetch, mem_access, printer, writeback};
 
+use gloo_dialogs;
 pub struct SimulatorEngine {
     // Registers and memory
     pub reg: [i32; 32],
@@ -76,7 +76,12 @@ impl SimulatorEngine {
 
             // Print state of pipeline registers
             // NEEDS TO BE FIXED:
-            self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
+            self.pc_instruction = i32::from_le_bytes([
+                self.mem[self.pc],
+                self.mem[self.pc + 1],
+                self.mem[self.pc + 2],
+                self.mem[self.pc + 3],
+            ]);
             println!(
                 "Fetch:\nInstruction: {}\nPC: {}\n",
                 printer::to_assembly(&fetch::fetch_instruction(&next_instruction)),
@@ -171,6 +176,11 @@ impl SimulatorEngine {
 
             // Update register values for next iteration
             Self::increment_program_counter(self);
+            if !self.running {
+                self.unexpected_termination();
+                break;
+            }
+
             if !self.stall {
                 fetch::update_for_decode(&mut self.if_id.fetch, &mut self.if_id.decode);
             }
@@ -206,14 +216,18 @@ impl SimulatorEngine {
             }
 
             self.cycles += 1;
-            
+
             // NEEDS TO BE FIXED:
-            self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
-            
+            self.pc_instruction = i32::from_le_bytes([
+                self.mem[self.pc],
+                self.mem[self.pc + 1],
+                self.mem[self.pc + 2],
+                self.mem[self.pc + 3],
+            ]);
+
             if stepwise {
                 break;
             }
-
 
             println!("______________________________________");
         }
@@ -228,13 +242,32 @@ impl SimulatorEngine {
         }
         self.program_len = data.len();
         // NEEDS TO BE FIXED:
-        self.pc_instruction = i32::from_le_bytes([self.mem[self.pc], self.mem[self.pc + 1], self.mem[self.pc + 2], self.mem[self.pc + 3]]);
+        self.pc_instruction = i32::from_le_bytes([
+            self.mem[self.pc],
+            self.mem[self.pc + 1],
+            self.mem[self.pc + 2],
+            self.mem[self.pc + 3],
+        ]);
     }
-    
+
     pub fn increment_program_counter(&mut self) {
+        if self.pc_src > self.mem.len() {
+            let mut message = 
+            format!("WARNING: Updated PC to {}, which is out of bound of the current memory size of {}.\n", self.pc_src, self.mem.len());
+            message.push_str("To prevent the program from crashing, the simulation will terminate.");
+            gloo_dialogs::alert(&message[..]);
+            self.running = false;
+        }
         if !self.stall {
             self.pc = self.pc_src;
         }
     }
-}
 
+    fn unexpected_termination(&mut self) {
+        self.pc_instruction = 0x2000;
+        self.if_id.decode.instruction = 0x2000;
+        self.id_ex.execute.instruction = 0x2000;
+        self.ex_mem.mem.instruction = 0x2000;
+        self.mem_wb.wb.instruction = 0x2000;
+    }
+}
