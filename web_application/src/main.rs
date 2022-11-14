@@ -1,22 +1,29 @@
-use mylib::{simulator_engine::SimulatorEngine, printer};
+use mylib::{simulator_engine::SimulatorEngine, printer, components};
 
-use web_sys::{Event, HtmlInputElement};
-use yew::{html, html::TargetCast, Component, Context, Html};
+use web_sys::{Event, HtmlInputElement, HtmlCanvasElement, WebGlRenderingContext as GL};
+use yew::{html, html::Scope, html::TargetCast, Component, Context, Html, NodeRef};
+use wasm_bindgen::JsCast;
 
 use gloo_file::callbacks::FileReader;
 use gloo_file::File;
+
+use gloo_render::{request_animation_frame, AnimationFrame};
 
 pub enum Msg {
     LoadedBytes(String, Vec<u8>),
     Files(File),
     RunSimulator(bool),
     Reset,
+    Render,
 }
 
 pub struct Model {
     reader: Option<FileReader>,
     file: (String, Vec<u8>),
     engine: SimulatorEngine,
+    gl: Option<GL>,
+    node_ref: NodeRef,
+    render_loop: Option<AnimationFrame>,
 }
 
 impl Component for Model {
@@ -28,6 +35,9 @@ impl Component for Model {
             reader: Default::default(),
             file: (String::from("Empty"), vec![]),
             engine: Default::default(),
+            gl: None,
+            node_ref: NodeRef::default(),
+            render_loop: None,
         }
     }
 
@@ -63,6 +73,10 @@ impl Component for Model {
                 self.engine = Default::default();
                 self.engine.read_bytes_to_mem(&self.file.1);
                 true
+            }
+            Msg::Render => {
+                self.render_datapath(ctx.link(), include_str!("./basic.frag"));
+                false
             }
         }
     }
@@ -102,11 +116,31 @@ impl Component for Model {
             {Self::display_stage("Writeback", &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
             </div>
             <div class="datapath">
-            <p>{"Datapath"}</p>
-            <canvas></canvas>
+            <canvas width="1160pt" height="600pt" ref={self.node_ref.clone()}/>
             </div>
             </div>
             </>
+        }
+    }
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        
+        let canvas = self.node_ref.cast::<HtmlCanvasElement>().unwrap();
+
+        let gl: GL = canvas
+            .get_context("webgl")
+            .unwrap()
+            .unwrap()
+            .dyn_into()
+            .unwrap();
+
+        self.gl = Some(gl);
+
+        if first_render {
+            let handle = {
+                let link = ctx.link().clone();
+                request_animation_frame(move |_time| link.send_message(Msg::Render))
+            };
+            self.render_loop = Some(handle);
         }
     }
 }
@@ -154,6 +188,78 @@ impl Model {
             }
             </table>
         }
+    }
+    fn render_datapath(&mut self, link: &Scope<Self>, frag: &str) {
+        let gl = self.gl.as_ref().expect("GL Context not initialized!");
+
+        let vert_code = include_str!("./basic.vert");
+        let frag_code = frag;
+
+        // This list of vertices will draw two triangles to cover the entire canvas.
+        
+        let (width, height) = (1160.0, 600.0);
+        
+        let mut components: Vec<Vec<f32>> = vec![];
+        let mut vertices: Vec<f32> = vec![];
+        // Create registers
+        let pc: Vec<f32> = components::pc(80.0, 260.0, width, height);
+        let if_id: Vec<f32> = components::register(290.0, 150.0, width, height);
+        let id_ex: Vec<f32> = components::register(540.0, 150.0, width, height);
+        let ex_mem: Vec<f32> = components::register(830.0, 150.0, width, height);
+        let mem_wb: Vec<f32> = components::register(1040.0, 150.0, width, height);
+        
+        // Create memories
+        let instruction_mem: Vec<f32> = components::instruction_mem(160.0, 220.0, width, height);
+
+        // Add registers to list of components
+        components.push(pc);
+        components.push(if_id);
+        components.push(id_ex);
+        components.push(ex_mem);
+        components.push(mem_wb);
+        components.push(instruction_mem);
+
+        for mut component in components {
+            vertices.append(&mut component);
+        }
+
+        let vertices: Vec<f32> = vertices;
+
+        let vertex_buffer = gl.create_buffer().unwrap();
+        let verts = js_sys::Float32Array::from(vertices.as_slice());
+
+        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&vertex_buffer));
+        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &verts, GL::STATIC_DRAW);
+
+        let vert_shader = gl.create_shader(GL::VERTEX_SHADER).unwrap();
+        gl.shader_source(&vert_shader, vert_code);
+        gl.compile_shader(&vert_shader);
+
+        let frag_shader = gl.create_shader(GL::FRAGMENT_SHADER).unwrap();
+        gl.shader_source(&frag_shader, frag_code);
+        gl.compile_shader(&frag_shader);
+
+        let shader_program = gl.create_program().unwrap();
+        gl.attach_shader(&shader_program, &vert_shader);
+        gl.attach_shader(&shader_program, &frag_shader);
+        gl.link_program(&shader_program);
+
+        gl.use_program(Some(&shader_program));
+
+        // Attach the position vector as an attribute for the GL context.
+        let position = gl.get_attrib_location(&shader_program, "a_position") as u32;
+        gl.vertex_attrib_pointer_with_i32(position, 2, GL::FLOAT, false, 0, 0);
+        gl.enable_vertex_attrib_array(position);
+
+        gl.draw_arrays(GL::LINES, 0, vertices.len() as i32 / 2);
+
+        let handle = {
+            let link = link.clone();
+            request_animation_frame(move |_time| link.send_message(Msg::Render))
+        };
+
+        // A reference to the new handle must be retained for the next render to run.
+        self.render_loop = Some(handle);
     } 
 }
 
