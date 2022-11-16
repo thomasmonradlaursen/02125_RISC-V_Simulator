@@ -19,10 +19,13 @@ pub fn to_assembly(instruction: &i32) -> String {
                 return format!("flush");
             }
             0x02 => {
-                return format!("terminated");
+                return format!("");
             }
             0x03 => {
                 return format!("stall");
+            }
+            0x04 => {
+                return format!("terminated");
             }
             unimplemented => {
                 return format!(

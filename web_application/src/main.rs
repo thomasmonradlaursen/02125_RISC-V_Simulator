@@ -44,6 +44,11 @@ impl Component for Model {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::LoadedBytes(file_name, data) => {
+                if data.len() > self.engine.mem.len() {
+                    let message = format!("The file is too large. Try another that is less than {} bytes", self.engine.mem.len());
+                    gloo_dialogs::alert(&message[..]);
+                    return false;
+                }
                 self.engine = Default::default();
                 self.engine.read_bytes_to_mem(&data);
                 self.file = (file_name, data);
@@ -209,7 +214,14 @@ impl Model {
         let mem_wb: Vec<f32> = components::register(1040.0, 150.0, width, height);
         
         // Create memories
-        let instruction_mem: Vec<f32> = components::instruction_mem(160.0, 220.0, width, height);
+        let instruction_mem: Vec<f32> = components::mem(160.0, 220.0, width, height);
+        let registers: Vec<f32> = components::mem(420.0, 220.0, width, height);
+        let data_mem: Vec<f32> = components::mem(920.0, 220.0, width, height);
+
+        // Create logic gates
+        let alu: Vec<f32> = components::alu(720.0, 220.0, width, height);
+        let mux_in1: Vec<f32> = components::multiplexer(650.0, 200.0, width, height);
+        let mux_in2: Vec<f32> = components::multiplexer(650.0, 330.0, width, height);
 
         // Add registers to list of components
         components.push(pc);
@@ -218,6 +230,11 @@ impl Model {
         components.push(ex_mem);
         components.push(mem_wb);
         components.push(instruction_mem);
+        components.push(alu);
+        components.push(mux_in1);
+        components.push(mux_in2);
+        components.push(registers);
+        components.push(data_mem);
 
         for mut component in components {
             vertices.append(&mut component);
@@ -250,7 +267,7 @@ impl Model {
         let position = gl.get_attrib_location(&shader_program, "a_position") as u32;
         gl.vertex_attrib_pointer_with_i32(position, 2, GL::FLOAT, false, 0, 0);
         gl.enable_vertex_attrib_array(position);
-
+        
         gl.draw_arrays(GL::LINES, 0, vertices.len() as i32 / 2);
 
         let handle = {

@@ -253,7 +253,7 @@ impl SimulatorEngine {
     pub fn increment_program_counter(&mut self) {
         if self.pc_src > self.mem.len() {
             let mut message = 
-            format!("WARNING: Updated PC to {}, which is out of bound of the current memory size of {}.\n", self.pc_src, self.mem.len());
+            format!("WARNING: Updated PC to {}, which is out of bound as the current size of memory is {} bytes.\n", self.pc_src, self.mem.len());
             message.push_str("To prevent the program from crashing, the simulation will terminate.");
             gloo_dialogs::alert(&message[..]);
             self.running = false;
@@ -264,10 +264,10 @@ impl SimulatorEngine {
     }
 
     fn unexpected_termination(&mut self) {
-        self.pc_instruction = 0x2000;
-        self.if_id.decode.instruction = 0x2000;
-        self.id_ex.execute.instruction = 0x2000;
-        self.ex_mem.mem.instruction = 0x2000;
-        self.mem_wb.wb.instruction = 0x2000;
+        self.pc_instruction = 0x4000;
+        self.if_id.decode.instruction = 0x4000;
+        self.id_ex.execute.instruction = 0x4000;
+        self.ex_mem.mem.instruction = 0x4000;
+        self.mem_wb.wb.instruction = 0x4000;
     }
 }
