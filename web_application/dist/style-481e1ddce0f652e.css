@@ -14,7 +14,7 @@
     grid-row-end: 2;
     border: 1px solid black;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     grid-auto-rows: 50pt;   
 }
 
@@ -26,6 +26,14 @@
 
 .controls button {
     margin: 10px
+}
+
+.forward_inactive {
+    background-color: rgb(245, 85, 85);
+}
+
+.forward_active {
+    background-color: rgb(112, 207, 112);
 }
 
 .stages {

@@ -13,6 +13,8 @@ pub enum Msg {
     LoadedBytes(String, Vec<u8>),
     Files(File),
     RunSimulator(bool),
+    Hazard,
+    Forwarding,
     Reset,
     Render,
 }
@@ -21,6 +23,8 @@ pub struct Model {
     reader: Option<FileReader>,
     file: (String, Vec<u8>),
     engine: SimulatorEngine,
+    hazard: bool,
+    forwarding: bool,
     gl: Option<GL>,
     node_ref: NodeRef,
     render_loop: Option<AnimationFrame>,
@@ -35,6 +39,8 @@ impl Component for Model {
             reader: Default::default(),
             file: (String::from("Empty"), vec![]),
             engine: Default::default(),
+            hazard: true,
+            forwarding: true,
             gl: None,
             node_ref: NodeRef::default(),
             render_loop: None,
@@ -83,6 +89,14 @@ impl Component for Model {
                 self.render_datapath(ctx.link(), include_str!("./basic.frag"));
                 false
             }
+            Msg::Forwarding => {
+                self.forwarding = !self.forwarding;
+                true
+            }
+            Msg::Hazard => {
+                self.hazard = !self.hazard;
+                true
+            }
         }
     }
     fn view(&self, ctx: &Context<Self>) -> Html {    
@@ -107,6 +121,8 @@ impl Component for Model {
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
                     <button onclick={ctx.link().callback(|_| Msg::Reset)}>{ "Reset" }</button>
+                    <button class={if self.hazard {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
+                    <button class={if self.forwarding {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
                 </div>
             <div class = "registers">
             <p>{ format!("Register values:")}</p>
