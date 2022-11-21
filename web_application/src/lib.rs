@@ -19,3 +19,4 @@ pub mod printer;
 
 // Graphics
 pub mod components;
+pub mod pipelines;

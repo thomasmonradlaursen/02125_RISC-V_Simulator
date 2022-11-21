@@ -19,8 +19,13 @@
 }
 
 .controls input {
+    margin: 10pt;
     border: 1pt solid black;
     text-align: center;
+}
+
+.controls button {
+    margin: 10px
 }
 
 .stages {
@@ -36,6 +41,7 @@
 }
 
 .stages p {
+    margin: 15px;
     border: 1px solid black;
     padding: 0.5em;
     height: 25pt;    

@@ -1,4 +1,4 @@
-use mylib::{simulator_engine::SimulatorEngine, printer, components};
+use mylib::{simulator_engine::SimulatorEngine, printer, pipelines};
 
 use web_sys::{Event, HtmlInputElement, HtmlCanvasElement, WebGlRenderingContext as GL};
 use yew::{html, html::Scope, html::TargetCast, Component, Context, Html, NodeRef};
@@ -201,46 +201,8 @@ impl Model {
         let frag_code = frag;
 
         // This list of vertices will draw two triangles to cover the entire canvas.
-        
-        let (width, height) = (1160.0, 600.0);
-        
-        let mut components: Vec<Vec<f32>> = vec![];
-        let mut vertices: Vec<f32> = vec![];
-        // Create registers
-        let pc: Vec<f32> = components::pc(80.0, 260.0, width, height);
-        let if_id: Vec<f32> = components::register(290.0, 150.0, width, height);
-        let id_ex: Vec<f32> = components::register(540.0, 150.0, width, height);
-        let ex_mem: Vec<f32> = components::register(830.0, 150.0, width, height);
-        let mem_wb: Vec<f32> = components::register(1040.0, 150.0, width, height);
-        
-        // Create memories
-        let instruction_mem: Vec<f32> = components::mem(160.0, 220.0, width, height);
-        let registers: Vec<f32> = components::mem(420.0, 220.0, width, height);
-        let data_mem: Vec<f32> = components::mem(920.0, 220.0, width, height);
 
-        // Create logic gates
-        let alu: Vec<f32> = components::alu(720.0, 220.0, width, height);
-        let mux_in1: Vec<f32> = components::multiplexer(650.0, 200.0, width, height);
-        let mux_in2: Vec<f32> = components::multiplexer(650.0, 330.0, width, height);
-
-        // Add registers to list of components
-        components.push(pc);
-        components.push(if_id);
-        components.push(id_ex);
-        components.push(ex_mem);
-        components.push(mem_wb);
-        components.push(instruction_mem);
-        components.push(alu);
-        components.push(mux_in1);
-        components.push(mux_in2);
-        components.push(registers);
-        components.push(data_mem);
-
-        for mut component in components {
-            vertices.append(&mut component);
-        }
-
-        let vertices: Vec<f32> = vertices;
+        let vertices: Vec<f32> = pipelines::simple_pipeline();
 
         let vertex_buffer = gl.create_buffer().unwrap();
         let verts = js_sys::Float32Array::from(vertices.as_slice());
