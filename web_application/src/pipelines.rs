@@ -57,15 +57,25 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let alu: Vec<f32> = components::alu(620.0, 220.0, width, height);
     let mux_in: Vec<f32> = components::multiplexer(570.0, 200.0, width, height);
     let mux_wb: Vec<f32> = components::multiplexer(1000.0, 290.0, width, height);
-    let pc_adder: Vec<f32> = components::adder(70.0, 380.0, width, height);
+    let pc_adder: Vec<f32> = components::adder(150.0, 390.0, width, height);
     let pc_mux: Vec<f32> = components::multiplexer(30.0, 265.0, width, height);
+    let pc_adder_imm: Vec<f32> = components::reverse_adder(150.0, 20.0, width, height);
 
     // Wires
     // Fetch
     let wire_mux_pc: Vec<f32> = components::wire((50.0, 300.0), (70.0, 300.0), width, height);
     let wire_pc_mem: Vec<f32> = components::wire((100.0, 300.0), (125.0, 300.0), width, height);
     let wire_mem_ifid: Vec<f32> = components::wire((195.0, 300.0), (220.0, 300.0), width, height);
-    let wire_add_plus_4: Vec<f32> = components::wire((60.0, 390.0), (70.0, 390.0), width, height);
+    let wire_add_plus_4: Vec<f32> = components::wire((140.0, 450.0), (150.0, 450.0), width, height);
+    let wire_pc_adder_1: Vec<f32> = components::wire((115.0, 300.0), (115.0, 400.0), width, height);
+    let wire_pc_adder_2: Vec<f32> = components::wire((115.0, 400.0), (150.0, 400.0), width, height);
+    let wire_adder_mux_1: Vec<f32> = components::wire((170.0, 425.0), (180.0, 425.0), width, height);
+    let wire_adder_mux_2: Vec<f32> = components::wire((180.0, 425.0), (180.0, 470.0), width, height);
+    let wire_adder_mux_3: Vec<f32> = components::wire((180.0, 470.0), (10.0, 470.0), width, height);
+    let wire_adder_mux_4: Vec<f32> = components::wire((10.0, 470.0), (10.0, 325.0), width, height);
+    let wire_adder_mux_5: Vec<f32> = components::wire((10.0, 325.0), (30.0, 325.0), width, height);
+    let wire_pc_idex_1: Vec<f32> = components::wire((85.0, 260.0), (85.0, 130.0), width, height);
+    let wire_pc_idex_2: Vec<f32> = components::wire((85.0, 130.0), (220.0, 130.0), width, height);
 
     // Decode
     let wire_ifid_split: Vec<f32> = components::wire((240.0, 300.0), (280.0, 300.0), width, height);
@@ -85,6 +95,7 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_reg_rs1: Vec<f32> = components::wire((410.0, 360.0), (450.0, 360.0), width, height);
     let wire_reg_rs2: Vec<f32> = components::wire((410.0, 260.0), (450.0, 260.0), width, height);
     let wire_imm_idex: Vec<f32> = components::wire((410.0, 175.0), (450.0, 175.0), width, height);
+    let wire_idex_pc_exmem: Vec<f32> = components::wire((240.0, 130.0), (450.0, 130.0), width, height);
     
     // Execute
     let wire_idex_alu: Vec<f32> = components::wire((470.0, 360.0), (620.0, 360.0), width, height);
@@ -100,9 +111,13 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_idex_control_exmem: Vec<f32> = components::wire((470.0, 425.0), (690.0, 425.0), width, height);
     let wire_idex_control_memwb: Vec<f32> = components::wire((470.0, 450.0), (690.0, 450.0), width, height);
     let wire_idex_pc_1: Vec<f32> = components::wire((500.0, 175.0), (500.0, 80.0), width, height);
-    let wire_idex_pc_2: Vec<f32> = components::wire((500.0, 80.0), (10.0, 80.0), width, height);
-    let wire_idex_pc_3: Vec<f32> = components::wire((10.0, 80.0), (10.0, 275.0), width, height);
-    let wire_idex_pc_4: Vec<f32> = components::wire((10.0, 275.0), (30.0, 275.0), width, height);
+    let wire_idex_pc_2: Vec<f32> = components::wire((500.0, 80.0), (170.0, 80.0), width, height);
+    let wire_idex_pc_3: Vec<f32> = components::wire((150.0, 55.0), (10.0, 55.0), width, height);
+    let wire_idex_pc_4: Vec<f32> = components::wire((10.0, 55.0), (10.0, 275.0), width, height);
+    let wire_idex_pc_5: Vec<f32> = components::wire((10.0, 275.0), (30.0, 275.0), width, height);
+    let wire_exmem_pc_adder_1: Vec<f32> = components::wire((470.0, 130.0), (490.0, 130.0), width, height);
+    let wire_exmem_pc_adder_2: Vec<f32> = components::wire((490.0, 130.0), (490.0, 30.0), width, height);
+    let wire_exmem_pc_adder_3: Vec<f32> = components::wire((490.0, 30.0), (170.0, 30.0), width, height);
     
     // Memory access
     let wire_alu_memwb_1: Vec<f32> = components::wire((740.0, 300.0), (740.0, 350.0), width, height);
@@ -148,6 +163,7 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(mux_wb);
     components.push(pc_adder);
     components.push(pc_mux);
+    components.push(pc_adder_imm);
 
     // Add wires
     // Fetch
@@ -155,6 +171,15 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(wire_pc_mem);
     components.push(wire_mem_ifid);
     components.push(wire_add_plus_4);
+    components.push(wire_pc_adder_1);
+    components.push(wire_pc_adder_2);
+    components.push(wire_adder_mux_1);
+    components.push(wire_adder_mux_2);
+    components.push(wire_adder_mux_3);
+    components.push(wire_adder_mux_4);
+    components.push(wire_adder_mux_5);
+    components.push(wire_pc_idex_1);
+    components.push(wire_pc_idex_2);
     
     // Decode
     components.push(wire_ifid_split);
@@ -172,6 +197,7 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(wire_control_idex_3);
     components.push(wire_control_idex_4);
     components.push(wire_control_idex_5);
+    components.push(wire_idex_pc_exmem);
     
     //Execute
     components.push(wire_idex_alu);
@@ -189,6 +215,10 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(wire_idex_pc_2);
     components.push(wire_idex_pc_3);
     components.push(wire_idex_pc_4);
+    components.push(wire_idex_pc_5);
+    components.push(wire_exmem_pc_adder_1);
+    components.push(wire_exmem_pc_adder_2);
+    components.push(wire_exmem_pc_adder_3);
     
     // Memory access
     components.push(wire_alu_memwb_1);

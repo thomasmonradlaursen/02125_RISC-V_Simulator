@@ -51,6 +51,12 @@ pub fn adder(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> 
     scale_to_canvas(x, y, width, height)
 }
 
+pub fn reverse_adder(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
+    let (mut x, mut y) = draw_adder_reverse();
+    translate_vertices(&mut x, &mut y, x_offset, y_offset);
+    scale_to_canvas(x, y, width, height)
+}
+
 fn draw_wire(start: (f32, f32), end: (f32,f32)) -> (Vec<f32>, Vec<f32>) {
     (vec![start.0, end.0], vec![start.1, end.1])
 }
@@ -70,6 +76,12 @@ fn draw_alu() -> (Vec<f32>, Vec<f32>) {
 fn draw_adder() -> (Vec<f32>, Vec<f32>) {
     let x: Vec<f32> = vec![0.0, 0.0,    0.0, 5.0,   5.0 , 0.0,  0.0, 0.0,   0.0, 20.0, 20.0, 20.0,  20.0,  0.0];
     let y: Vec<f32> = vec![0.0, 30.0,   30.0, 35.0, 35.0, 40.0, 40.0, 70.0,  70.0, 50.0, 50.0, 20.0,  20.0,  0.0];
+    (x,y)
+}
+
+fn draw_adder_reverse() -> (Vec<f32>, Vec<f32>) {
+    let x: Vec<f32> = vec![20.0, 20.0,  20.0, 15.0,   15.0 , 20.0,  20.0,  20.0,   20.0, 0.0,   0.0,   0.0,  00.0, 20.0];
+    let y: Vec<f32> = vec![0.0, 30.0,   30.0, 35.0,   35.0, 40.0,   40.0,  70.0,  70.0, 50.0,  50.0, 20.0,  20.0, 0.0];
     (x,y)
 }
 

@@ -144,7 +144,7 @@
 .instr-mem {
     font-size: 9pt;
     position: absolute;
-    left: 138px;
+    left: 144px;
     bottom: 295px;
 }
 
@@ -165,7 +165,7 @@
 .pc {
     font-size: 9pt;
     position: absolute;
-    left: 78px;
+    left: 87px;
     bottom: 300px;
 }
 
@@ -215,5 +215,33 @@
     font-size: 9pt;
     position: absolute;
     left: 683px;
-    bottom: 41px;
+    bottom: 32px;
+}
+
+.adder_pc {
+    font-size: 8pt;
+    position: absolute;
+    left: 164px;
+    bottom: 45px;
+}
+
+.adder_pc_imm {
+    font-size: 8pt;
+    position: absolute;
+    left: 167px;
+    bottom: 415px;
+}
+
+.mux_pc {
+    font-size: 8pt;
+    position: absolute;
+    left: 44px;
+    bottom: 290px;
+}
+
+.plus-4 {
+    font-size: 10pt;
+    position: absolute;
+    left: 127px;
+    bottom: 451px;
 }
