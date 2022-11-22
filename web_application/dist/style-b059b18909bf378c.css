@@ -28,12 +28,12 @@
     margin: 10px
 }
 
-.forward_inactive {
-    background-color: rgb(245, 85, 85);
+.config_inactive {
+    background-color: rgb(245, 85, 85, 0.5);
 }
 
-.forward_active {
-    background-color: rgb(112, 207, 112);
+.config_active {
+    background-color: rgb(112, 207, 112, 0.5);
 }
 
 .stages {
@@ -113,6 +113,20 @@
     bottom: 300px;
 }
 
+.mux-alu {
+    font-size: 8pt;
+    position: absolute;
+    left: 585px;
+    bottom: 225px;
+}
+
+.mux-wb {
+    font-size: 8pt;
+    position: absolute;
+    left: 1015px;
+    bottom: 315px;
+}
+
 .reg {
     font-size: 9pt;
     position: absolute;
@@ -174,4 +188,25 @@
     position: absolute;
     left: 914px;
     bottom: 500px;
+}
+
+.hazard {
+    font-size: 9pt;
+    position: absolute;
+    left: 348px;
+    bottom: 541px;
+}
+
+.hazard_replace {
+    font-size: 9pt;
+    position: absolute;
+    left: 694px;
+    bottom: 41px;
+}
+
+.forwarding {
+    font-size: 9pt;
+    position: absolute;
+    left: 683px;
+    bottom: 41px;
 }

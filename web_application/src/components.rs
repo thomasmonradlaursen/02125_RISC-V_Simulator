@@ -16,6 +16,12 @@ pub fn imm_gen(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32
     scale_to_canvas(x, y, width, height)
 }
 
+pub fn config_unit(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
+    let (mut x,mut y) = draw_square(90.0, 60.0);
+    translate_vertices(&mut x, &mut y, x_offset, y_offset);
+    scale_to_canvas(x, y, width, height)
+}
+
 pub fn wire(start: (f32, f32), end:(f32,f32), width: f32, height: f32) -> Vec<f32> {
     let (x, y) = draw_wire(start, end);
     scale_to_canvas(x, y, width, height)

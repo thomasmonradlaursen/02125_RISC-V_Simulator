@@ -1,6 +1,36 @@
 use crate::components;
 
-pub fn simple_pipeline() -> Vec<f32> {
+pub fn hazard_forwarding_unit() -> Vec<f32> {
+    let mut res: Vec<f32> = vec![];
+    let mut hazard_unit: Vec<f32> = hazard_unit();
+    let mut forwarding_unit: Vec<f32> = forwarding_unit();
+    res.append(&mut hazard_unit);
+    res.append(&mut forwarding_unit);
+    res
+}
+
+pub fn hazard_only_unit() -> Vec<f32> {
+    let mut res: Vec<f32> = vec![];
+    let mut hazard_unit: Vec<f32> = hazard_unit();
+    let mut hazard_replace_unit: Vec<f32> = forwarding_unit();
+    res.append(&mut hazard_unit);
+    res.append(&mut hazard_replace_unit);
+    res
+}
+
+pub fn hazard_unit() -> Vec<f32> {
+    let (width, height) = (1160.0, 600.0);
+    let hazard_unit: Vec<f32> = components::config_unit(310.0, 520.0, width, height);
+    hazard_unit
+}
+
+pub fn forwarding_unit() -> Vec<f32> {
+    let (width, height) = (1160.0, 600.0);
+    let forwarding_unit: Vec<f32> = components::config_unit(655.0, 20.0, width, height);
+    forwarding_unit
+}
+
+pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let (width, height) = (1160.0, 600.0);
 
     let mut components: Vec<Vec<f32>> = vec![];
@@ -127,6 +157,17 @@ pub fn simple_pipeline() -> Vec<f32> {
     components.push(wire_mux_reg_3);
     components.push(wire_mux_reg_4);
     components.push(wire_mux_reg_5);
+
+    // Hazard and forwarding units
+    if hazard && forwarding {
+        components.push(hazard_forwarding_unit());
+    }
+    else if hazard {
+        components.push(hazard_only_unit());
+    }
+    else if forwarding {
+        components.push(forwarding_unit());
+    }
 
     for mut component in components {
         vertices.append(&mut component);

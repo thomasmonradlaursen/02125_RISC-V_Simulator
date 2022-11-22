@@ -77,7 +77,7 @@ impl Component for Model {
                 true
             }
             Msg::RunSimulator(stepwise) => {
-                self.engine.run_engine(stepwise, true, true);
+                self.engine.run_engine(stepwise, self.hazard, self.forwarding);
                 true
             }
             Msg::Reset => {
@@ -121,8 +121,8 @@ impl Component for Model {
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
                     <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
                     <button onclick={ctx.link().callback(|_| Msg::Reset)}>{ "Reset" }</button>
-                    <button class={if self.hazard {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
-                    <button class={if self.forwarding {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
+                    <button class={if self.hazard {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
+                    <button class={if self.forwarding {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
                 </div>
             {Self::display_registers(&self.engine.reg)}
             {Self::display_instructions(&self.file)}
@@ -135,6 +135,7 @@ impl Component for Model {
             </div>
             <div class="datapath">
             {Self::label_datapath()}
+            {Self::label_configs(&self.hazard, &self.forwarding)}
             <canvas width="1160pt" height="600pt" ref={self.node_ref.clone()}/>
             </div>
             </div>
@@ -165,6 +166,33 @@ impl Component for Model {
 }
 
 impl Model {
+    fn label_configs(hazard: &bool, forwarding: &bool) -> Html {
+        if *hazard && *forwarding {
+            return html!{
+                <>
+                <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
+                <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
+                </>
+            }
+        }
+        if *hazard {
+            return html!{
+                <>
+                <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
+                <div class="hazard_replace">{"Hazard"}<br/>{"unit"}</div>
+                </>
+            }
+        }
+        if *forwarding {
+            return html!{
+                <>
+                <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
+                </>
+            }
+        }
+        html!{}
+    }
+    
     fn label_datapath() -> Html {
         html!{
             <>
@@ -174,6 +202,8 @@ impl Model {
             <div class="memwb">{"MEM/WB"}</div>
             <div class="pc">{"PC"}</div>
             <div class="alu">{"ALU"}</div>
+            <div class="mux-alu">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="mux-wb">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="reg">{"Registers"}</div>
             <div class="data-mem">{"Data"}<br/>{"memory"}</div>
             <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
@@ -235,7 +265,7 @@ impl Model {
 
         // This list of vertices will draw two triangles to cover the entire canvas.
 
-        let vertices: Vec<f32> = pipelines::simple_pipeline();
+        let vertices: Vec<f32> = pipelines::simple_pipeline(self.hazard, self.forwarding);
 
         let vertex_buffer = gl.create_buffer().unwrap();
         let verts = js_sys::Float32Array::from(vertices.as_slice());
