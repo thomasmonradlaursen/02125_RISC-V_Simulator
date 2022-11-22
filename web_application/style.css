@@ -1,9 +1,9 @@
 .container {
+    padding: 0.3em;
     display: grid;
     grid-template-columns: 3fr 2fr 1fr 1fr;
-    grid-template-rows: repeat(9, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     text-align: center;
-    overflow-y: hidden;
 }
 
 .controls {
@@ -104,4 +104,74 @@
     margin-left: auto;
     margin-right: auto;
     padding: 0.25em;
+}
+
+.alu {
+    font-size: 9pt;
+    position: absolute;
+    left: 641px;
+    bottom: 300px;
+}
+
+.reg {
+    font-size: 9pt;
+    position: absolute;
+    left: 344px;
+    bottom: 300px;
+}
+
+.data-mem {
+    font-size: 9pt;
+    position: absolute;
+    left: 805px;
+    bottom: 228px;
+}
+
+.instr-mem {
+    font-size: 9pt;
+    position: absolute;
+    left: 138px;
+    bottom: 295px;
+}
+
+.imm-gen {
+    font-size: 9pt;
+    position: absolute;
+    left: 341px;
+    bottom: 168px;
+}
+
+.pc {
+    font-size: 9pt;
+    position: absolute;
+    left: 78px;
+    bottom: 300px;
+}
+
+.ifid {
+    font-size: 9pt;
+    position: absolute;
+    left: 226px;
+    bottom: 500px;
+}
+
+.idex {
+    font-size: 9pt;
+    position: absolute;
+    left: 453px;
+    bottom: 500px;
+}
+
+.exmem {
+    font-size: 9pt;
+    position: absolute;
+    left: 685px;
+    bottom: 500px;
+}
+
+.memwb {
+    font-size: 9pt;
+    position: absolute;
+    left: 914px;
+    bottom: 500px;
 }

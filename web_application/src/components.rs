@@ -1,5 +1,5 @@
 pub fn register(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
-    let (mut x,mut y) = draw_square(20.0, 300.0);
+    let (mut x,mut y) = draw_square(20.0, 380.0);
     translate_vertices(&mut x, &mut y, x_offset, y_offset);
     scale_to_canvas(x, y, width, height)
 }

@@ -124,10 +124,7 @@ impl Component for Model {
                     <button class={if self.hazard {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
                     <button class={if self.forwarding {"forward_active"} else {"forward_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
                 </div>
-            <div class = "registers">
-            <p>{ format!("Register values:")}</p>
             {Self::display_registers(&self.engine.reg)}
-            </div>
             {Self::display_instructions(&self.file)}
             <div class="stages">
             {Self::display_stage("Fetch", &printer::to_assembly(&self.engine.pc_instruction))}
@@ -137,6 +134,7 @@ impl Component for Model {
             {Self::display_stage("Writeback", &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
             </div>
             <div class="datapath">
+            {Self::label_datapath()}
             <canvas width="1160pt" height="600pt" ref={self.node_ref.clone()}/>
             </div>
             </div>
@@ -167,6 +165,22 @@ impl Component for Model {
 }
 
 impl Model {
+    fn label_datapath() -> Html {
+        html!{
+            <>
+            <div class="ifid">{"IF/ID"}</div>
+            <div class="idex">{"ID/EX"}</div>
+            <div class="exmem">{"EX/MEM"}</div>
+            <div class="memwb">{"MEM/WB"}</div>
+            <div class="pc">{"PC"}</div>
+            <div class="alu">{"ALU"}</div>
+            <div class="reg">{"Registers"}</div>
+            <div class="data-mem">{"Data"}<br/>{"memory"}</div>
+            <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
+            <div class="imm-gen">{"Immidiate"}<br/>{"generator"}</div>
+            </>
+        }
+    }
     fn display_stage(stage: &str, instruction: &String) -> Html {
         html!{
             <p>{stage}<br/>{instruction}</p>
@@ -194,6 +208,8 @@ impl Model {
     } 
     fn display_registers(registers: &[i32; 32]) -> Html {
         html!{
+            <div class = "registers">
+            <p>{ format!("Register values:")}</p>
             <table border = "1">
             {
                 registers.into_iter().enumerate().map(|(count, register)| {
@@ -208,6 +224,7 @@ impl Model {
                 }).collect::<Html>()
             }
             </table>
+            </div>
         }
     }
     fn render_datapath(&mut self, link: &Scope<Self>, frag: &str) {
