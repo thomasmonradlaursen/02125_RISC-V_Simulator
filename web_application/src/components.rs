@@ -34,13 +34,19 @@ pub fn pc(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
 }
 
 pub fn alu(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
-    let (mut x, mut y) = draw_adder();
+    let (mut x, mut y) = draw_alu();
     translate_vertices(&mut x, &mut y, x_offset, y_offset);
     scale_to_canvas(x, y, width, height)
 }
 
 pub fn multiplexer(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
     let (mut x, mut y) = draw_multiplexer();
+    translate_vertices(&mut x, &mut y, x_offset, y_offset);
+    scale_to_canvas(x, y, width, height)
+}
+
+pub fn adder(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
+    let (mut x, mut y) = draw_adder();
     translate_vertices(&mut x, &mut y, x_offset, y_offset);
     scale_to_canvas(x, y, width, height)
 }
@@ -55,9 +61,15 @@ fn draw_square(width: f32, length: f32) -> (Vec<f32>, Vec<f32>) {
     (x,y)
 }
 
-fn draw_adder() -> (Vec<f32>, Vec<f32>) {
+fn draw_alu() -> (Vec<f32>, Vec<f32>) {
     let x: Vec<f32> = vec![0.0, 0.0,    0.0, 10.0,  10.0,   0.0,    0.0,    0.0, 0.0, 40.0, 40.0, 40.0, 40.0, 0.0];
     let y: Vec<f32> = vec![0.0, 60.0,  60.0, 80.0,  80.0, 100.0,  100.0,  160.0, 160.0, 120.0, 120.0, 40.0, 40.0, 0.0];
+    (x,y)
+}
+
+fn draw_adder() -> (Vec<f32>, Vec<f32>) {
+    let x: Vec<f32> = vec![0.0, 0.0,    0.0, 5.0,   5.0 , 0.0,  0.0, 0.0,   0.0, 20.0, 20.0, 20.0,  20.0,  0.0];
+    let y: Vec<f32> = vec![0.0, 30.0,   30.0, 35.0, 35.0, 40.0, 40.0, 70.0,  70.0, 50.0, 50.0, 20.0,  20.0,  0.0];
     (x,y)
 }
 

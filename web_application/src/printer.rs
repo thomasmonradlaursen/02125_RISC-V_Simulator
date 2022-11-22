@@ -25,13 +25,10 @@ pub fn to_assembly(instruction: &i32) -> String {
                 return format!("stall");
             }
             0x04 => {
-                return format!("terminated");
+                return format!("");
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
 
@@ -51,11 +48,8 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x05 => {
                 return format!("LHU x{}, {}(x{})", rd, imm110, rs1);
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x13 => match funct3 {
@@ -81,11 +75,8 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SRAI x{}, x{}, {}", rd, rs1, shamt);
                 }
-                unimplemented => {
-                    return format!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    )
+                _ => {
+                    return format!("Unknown instruction")
                 }
             },
             0x06 => {
@@ -94,11 +85,8 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("ANDI x{}, x{}, {}", rd, rs1, imm110);
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x17 => {
@@ -117,11 +105,8 @@ pub fn to_assembly(instruction: &i32) -> String {
                 let offset = s_format(&instruction);
                 return format!("SW x{}, {}(x{})", rs2, offset, rs1);
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x33 => match funct3 {
@@ -132,11 +117,8 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SUB x{}, x{}, x{}", rd, rs1, rs2);
                 }
-                unimplemented => {
-                    return format!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    )
+                _ => {
+                    return format!("Unknown instruction")
                 }
             },
             0x01 => {
@@ -158,11 +140,8 @@ pub fn to_assembly(instruction: &i32) -> String {
                 0x20 => {
                     return format!("SRA x{}, x{}, x{}", rd, rs1, rs2);
                 }
-                unimplemented => {
-                    return format!(
-                        "Funct7 {:#02x} for funct3 {:#02x} for opcode {:#02x} not implemented...",
-                        unimplemented, funct3, opcode
-                    )
+                _ => {
+                    return format!("Unknown instruction")
                 }
             },
             0x06 => {
@@ -171,11 +150,8 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("AND x{}, x{}, x{}", rd, rs1, rs2);
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x37 => {
@@ -200,22 +176,16 @@ pub fn to_assembly(instruction: &i32) -> String {
             0x07 => {
                 return format!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x67 => match funct3 {
             0x00 => {
                 return format!("JALR x{}, x{}, {}", rd, rs1, imm110);
             }
-            unimplemented => {
-                return format!(
-                    "Funct3 {:#02x} for opcode {:#02x} not implemented...",
-                    unimplemented, opcode
-                )
+            _ => {
+                return format!("Unknown instruction")
             }
         },
         0x6F => {
@@ -224,7 +194,7 @@ pub fn to_assembly(instruction: &i32) -> String {
         0x73 => {
             return format!("ECALL");
         }
-        unimplemented => return format!("Opcode {:#02x} not implemented...", unimplemented),
+        _ => return format!("Unknown instruction"),
     }
 }
 

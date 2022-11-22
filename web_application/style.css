@@ -130,7 +130,7 @@
 .reg {
     font-size: 9pt;
     position: absolute;
-    left: 344px;
+    left: 363px;
     bottom: 300px;
 }
 
@@ -151,8 +151,15 @@
 .imm-gen {
     font-size: 9pt;
     position: absolute;
-    left: 341px;
+    left: 361px;
     bottom: 168px;
+}
+
+.control {
+    font-size: 9pt;
+    position: absolute;
+    left: 366px;
+    bottom: 424px;
 }
 
 .pc {

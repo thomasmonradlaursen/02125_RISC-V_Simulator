@@ -208,6 +208,7 @@ impl Model {
             <div class="data-mem">{"Data"}<br/>{"memory"}</div>
             <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
             <div class="imm-gen">{"Immidiate"}<br/>{"generator"}</div>
+            <div class="control">{"Control"}</div>
             </>
         }
     }
