@@ -45,7 +45,7 @@
     border: 1px solid black;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: 50pt;      
+    grid-auto-rows: 50pt;    
 }
 
 .stages p {
@@ -64,6 +64,13 @@
     grid-row-start: 3;
     grid-row-end: 9;
     text-align: center;
+    overflow-x: scroll;
+}
+
+.datapath canvas {
+    left: 9px;
+    bottom:8px;
+    position: absolute;
 }
 
 .registers{
@@ -208,14 +215,14 @@
     font-size: 9pt;
     position: absolute;
     left: 694px;
-    bottom: 41px;
+    bottom: 31px;
 }
 
 .forwarding {
     font-size: 9pt;
     position: absolute;
     left: 683px;
-    bottom: 32px;
+    bottom: 31px;
 }
 
 .adder_pc {

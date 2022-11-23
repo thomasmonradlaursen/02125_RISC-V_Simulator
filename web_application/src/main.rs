@@ -209,7 +209,7 @@ impl Model {
             <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
             <div class="imm-gen">{"Immidiate"}<br/>{"generator"}</div>
             <div class="control">{"Control"}</div>
-            <div class="adder_pc">{"A"}<br/>{"D"}<br/>{"D"}</div>
+            <div class="adder_pc">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="mux_pc">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="adder_pc_imm">{"A"}<br/>{"D"}<br/>{"D"}</div>
             <div class="plus-4">{"+ 4"}</div>

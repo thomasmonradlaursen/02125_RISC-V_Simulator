@@ -45,6 +45,12 @@ pub fn multiplexer(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec
     scale_to_canvas(x, y, width, height)
 }
 
+pub fn reverse_multiplexer(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
+    let (mut x, mut y) = draw_reverse_multiplexer();
+    translate_vertices(&mut x, &mut y, x_offset, y_offset);
+    scale_to_canvas(x, y, width, height)
+}
+
 pub fn adder(x_offset: f32, y_offset: f32, width: f32, height: f32) -> Vec<f32> {
     let (mut x, mut y) = draw_adder();
     translate_vertices(&mut x, &mut y, x_offset, y_offset);
@@ -87,6 +93,12 @@ fn draw_adder_reverse() -> (Vec<f32>, Vec<f32>) {
 
 fn draw_multiplexer() -> (Vec<f32>, Vec<f32>) {
     let x: Vec<f32> = vec![0.0, 0.0,    0.0, 20.0,  20.0, 20.0,  20.0,  0.0];
+    let y: Vec<f32> = vec![0.0, 70.0,  70.0, 50.0,  50.0, 20.0,  20.0,  0.0];
+    (x,y)
+}
+
+fn draw_reverse_multiplexer() -> (Vec<f32>, Vec<f32>) {
+    let x: Vec<f32> = vec![20.0, 20.0,   20.0, 0.0,  0.0, 0.0,  00.0,  20.0];
     let y: Vec<f32> = vec![0.0, 70.0,  70.0, 50.0,  50.0, 20.0,  20.0,  0.0];
     (x,y)
 }
