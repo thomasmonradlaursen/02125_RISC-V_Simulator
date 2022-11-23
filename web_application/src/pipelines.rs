@@ -58,7 +58,7 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let mux_in: Vec<f32> = components::multiplexer(580.0, 200.0, width, height);
     let mux_rs1: Vec<f32> = components::multiplexer(580.0, 325.0, width, height);
     let mux_rs1_forward: Vec<f32> = components::multiplexer(540.0, 305.0, width, height);
-    let mux_rs2_forward: Vec<f32> = components::multiplexer(520.0, 225.0, width, height);
+    let mux_rs2_forward: Vec<f32> = components::multiplexer(540.0, 225.0, width, height);
     let mux_wb: Vec<f32> = components::multiplexer(1000.0, 290.0, width, height);
     let pc_adder: Vec<f32> = components::adder(150.0, 395.0, width, height);
     let pc_mux: Vec<f32> = components::multiplexer(30.0, 265.0, width, height);
@@ -109,13 +109,13 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_pc_mux_2: Vec<f32> = components::wire((570.0, 390.0), (570.0, 380.0), width, height);
     let wire_pc_mux_3: Vec<f32> = components::wire((570.0, 380.0), (580.0, 380.0), width, height);
     let wire_rs2_mux: Vec<f32> = components::wire((470.0, 260.0), (580.0, 260.0), width, height);
-    let wire_rs2_mux_f: Vec<f32> = components::wire((470.0, 260.0), (520.0, 260.0), width, height);
-    let wire_mux_rs2_mux_f: Vec<f32> = components::wire((540.0, 260.0), (580.0, 260.0), width, height);
-    let wire_imm_rs2_1: Vec<f32> = components::wire((470.0, 185.0), (535.0, 185.0), width, height);
-    let wire_imm_rs2_2: Vec<f32> = components::wire((535.0, 185.0), (535.0, 210.0), width, height);
-    let wire_imm_rs2_3: Vec<f32> = components::wire((535.0, 210.0), (580.0, 210.0), width, height);
-    let wire_rs2_exmem_1: Vec<f32> = components::wire((555.0, 260.0), (555.0, 175.0), width, height);
-    let wire_rs2_exmem_2: Vec<f32> = components::wire((555.0, 175.0), (690.0, 175.0), width, height);
+    let wire_rs2_mux_f: Vec<f32> = components::wire((470.0, 260.0), (540.0, 260.0), width, height);
+    let wire_mux_rs2_mux_f: Vec<f32> = components::wire((560.0, 260.0), (580.0, 260.0), width, height);
+    let wire_imm_rs2_1: Vec<f32> = components::wire((470.0, 185.0), (550.0, 185.0), width, height);
+    let wire_imm_rs2_2: Vec<f32> = components::wire((550.0, 185.0), (550.0, 210.0), width, height);
+    let wire_imm_rs2_3: Vec<f32> = components::wire((550.0, 210.0), (580.0, 210.0), width, height);
+    let wire_rs2_exmem_1: Vec<f32> = components::wire((570.0, 260.0), (570.0, 175.0), width, height);
+    let wire_rs2_exmem_2: Vec<f32> = components::wire((570.0, 175.0), (690.0, 175.0), width, height);
     let wire_mux_rs2_alu: Vec<f32> = components::wire((600.0, 235.0), (620.0, 235.0), width, height);
     let wire_alu_exmem: Vec<f32> = components::wire((660.0, 300.0), (690.0, 300.0), width, height);
     let wire_idex_rd_exmem: Vec<f32> = components::wire((470.0, 120.0), (690.0,120.0), width, height);
@@ -126,9 +126,9 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_idex_pc_3: Vec<f32> = components::wire((150.0, 55.0), (10.0, 55.0), width, height);
     let wire_idex_pc_4: Vec<f32> = components::wire((10.0, 55.0), (10.0, 275.0), width, height);
     let wire_idex_pc_5: Vec<f32> = components::wire((10.0, 275.0), (30.0, 275.0), width, height);
-    let wire_exmem_pc_adder_1: Vec<f32> = components::wire((470.0, 130.0), (490.0, 130.0), width, height);
-    let wire_exmem_pc_adder_2: Vec<f32> = components::wire((490.0, 130.0), (490.0, 30.0), width, height);
-    let wire_exmem_pc_adder_3: Vec<f32> = components::wire((490.0, 30.0), (170.0, 30.0), width, height);
+    let wire_idex_pc_adder_1: Vec<f32> = components::wire((470.0, 130.0), (480.0, 130.0), width, height);
+    let wire_idex_pc_adder_2: Vec<f32> = components::wire((480.0, 130.0), (480.0, 30.0), width, height);
+    let wire_idex_pc_adder_3: Vec<f32> = components::wire((480.0, 30.0), (170.0, 30.0), width, height);
     let wire_mux_forward_mux: Vec<f32> = components::wire((560.0, 340.0), (580.0, 340.0), width, height);
     let wire_mux_rs1_alu: Vec<f32> = components::wire((600.0, 360.0), (620.0, 360.0), width, height);
     
@@ -157,18 +157,37 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_memwb_rd_reg_3: Vec<f32> = components::wire((960.0, 100.0), (260.0, 100.0), width, height);
     let wire_memwb_rd_reg_4: Vec<f32> = components::wire((260.0, 100.0), (260.0, 275.0), width, height);
     let wire_memwb_rd_reg_5: Vec<f32> = components::wire((260.0, 275.0), (340.0, 275.0), width, height);
-
+    
     // Forwarding / Hazards
-    let wire_exmem_rd_forward_1: Vec<f32> = components::wire((765.0, 120.0), (765.0, 60.0), width, height);
-    let wire_exmem_rd_forward_2: Vec<f32> = components::wire((765.0, 60.0), (745.0, 60.0), width, height);
-    let wire_memwb_rd_forward_1: Vec<f32> = components::wire((960.0, 120.0), (960.0, 40.0), width, height);
-    let wire_memwb_rd_forward_2: Vec<f32> = components::wire((960.0, 40.0), (745.0, 40.0), width, height);
-
     let wire_ifid_rs1_idex_1: Vec<f32> = components::wire((310.0, 360.0), (310.0, 150.0), width, height);
     let wire_ifid_rs1_idex_2: Vec<f32> = components::wire((310.0, 150.0), (450.0, 150.0), width, height);
     let wire_ifid_rs2_idex_1: Vec<f32> = components::wire((300.0, 320.0), (300.0, 140.0), width, height);
     let wire_ifid_rs2_idex_2: Vec<f32> = components::wire((300.0, 140.0), (450.0, 140.0), width, height);
 
+    let wire_idex_rs1_forward_1: Vec<f32> = components::wire((470.0, 150.0), (500.0, 150.0), width, height);
+    let wire_idex_rs1_forward_2: Vec<f32> = components::wire((500.0, 150.0), (500.0, 30.0), width, height);
+    let wire_idex_rs1_forward_3: Vec<f32> = components::wire((500.0, 30.0), (655.0, 30.0), width, height);
+
+    let wire_idex_rs2_forward_1: Vec<f32> = components::wire((470.0, 140.0), (490.0, 140.0), width, height);
+    let wire_idex_rs2_forward_2: Vec<f32> = components::wire((490.0, 140.0), (490.0, 20.0), width, height);
+    let wire_idex_rs2_forward_3: Vec<f32> = components::wire((490.0, 20.0), (655.0, 20.0), width, height);
+    
+    let wire_exmem_rd_forward_1: Vec<f32> = components::wire((765.0, 120.0), (765.0, 60.0), width, height);
+    let wire_exmem_rd_forward_2: Vec<f32> = components::wire((765.0, 60.0), (745.0, 60.0), width, height);
+    let wire_memwb_rd_forward_1: Vec<f32> = components::wire((960.0, 120.0), (960.0, 40.0), width, height);
+    let wire_memwb_rd_forward_2: Vec<f32> = components::wire((960.0, 40.0), (745.0, 40.0), width, height);
+
+    // Forwarding
+    let wire_exmem_res_forward_1: Vec<f32> = components::wire((740.0, 350.0), (740.0, 520.0), width, height);
+    let wire_exmem_res_forward_2: Vec<f32> = components::wire((740.0, 520.0), (520.0, 520.0), width, height);
+    let wire_exmem_res_forward_3: Vec<f32> = components::wire((520.0, 520.0), (520.0, 285.0), width, height);
+    let wire_exmem_res_forward_4: Vec<f32> = components::wire((520.0, 365.0), (540.0, 365.0), width, height);
+    let wire_exmem_res_forward_5: Vec<f32> = components::wire((520.0, 285.0), (540.0, 285.0), width, height);
+
+    let wire_memwb_res_forward_1: Vec<f32> = components::wire((530.0, 100.0), (530.0, 315.0), width, height);
+    let wire_memwb_res_forward_2: Vec<f32> = components::wire((530.0, 235.0), (540.0, 235.0), width, height);
+    let wire_memwb_res_forward_3: Vec<f32> = components::wire((530.0, 315.0), (540.0, 315.0), width, height);
+    
     // Add forwarding / hazard components
     if forwarding || hazard {
         components.push(wire_exmem_rd_forward_1);
@@ -179,6 +198,23 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
         components.push(wire_ifid_rs1_idex_2);
         components.push(wire_ifid_rs2_idex_1);
         components.push(wire_ifid_rs2_idex_2);
+        components.push(wire_idex_rs1_forward_1);
+        components.push(wire_idex_rs1_forward_2);
+        components.push(wire_idex_rs1_forward_3);
+        components.push(wire_idex_rs2_forward_1);
+        components.push(wire_idex_rs2_forward_2);
+        components.push(wire_idex_rs2_forward_3);
+    }
+
+    if forwarding {
+        components.push(wire_exmem_res_forward_1);
+        components.push(wire_exmem_res_forward_2);
+        components.push(wire_exmem_res_forward_3);
+        components.push(wire_exmem_res_forward_4);
+        components.push(wire_exmem_res_forward_5);
+        components.push(wire_memwb_res_forward_1);
+        components.push(wire_memwb_res_forward_2);
+        components.push(wire_memwb_res_forward_3);
     }
 
     // Add registers to list of components
@@ -267,9 +303,9 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(wire_idex_pc_3);
     components.push(wire_idex_pc_4);
     components.push(wire_idex_pc_5);
-    components.push(wire_exmem_pc_adder_1);
-    components.push(wire_exmem_pc_adder_2);
-    components.push(wire_exmem_pc_adder_3);
+    components.push(wire_idex_pc_adder_1);
+    components.push(wire_idex_pc_adder_2);
+    components.push(wire_idex_pc_adder_3);
     components.push(wire_mux_forward_mux);
     components.push(wire_mux_rs1_alu);
     
