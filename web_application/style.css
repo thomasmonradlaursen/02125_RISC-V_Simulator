@@ -120,20 +120,6 @@
     bottom: 300px;
 }
 
-.mux-alu {
-    font-size: 8pt;
-    position: absolute;
-    left: 585px;
-    bottom: 225px;
-}
-
-.mux-wb {
-    font-size: 8pt;
-    position: absolute;
-    left: 1015px;
-    bottom: 315px;
-}
-
 .reg {
     font-size: 9pt;
     position: absolute;
@@ -159,7 +145,7 @@
     font-size: 9pt;
     position: absolute;
     left: 361px;
-    bottom: 168px;
+    bottom: 179px;
 }
 
 .control {
@@ -207,8 +193,8 @@
 .hazard {
     font-size: 9pt;
     position: absolute;
-    left: 348px;
-    bottom: 541px;
+    left: 329px;
+    bottom: 533px;
 }
 
 .hazard_replace {
@@ -225,18 +211,25 @@
     bottom: 31px;
 }
 
-.adder_pc {
+.mux-alu_rs1 {
     font-size: 8pt;
     position: absolute;
-    left: 164px;
-    bottom: 45px;
+    left: 594px;
+    bottom: 225px;
 }
 
-.adder_pc_imm {
+.mux-alu_rs2 {
     font-size: 8pt;
     position: absolute;
-    left: 167px;
-    bottom: 415px;
+    left: 594px;
+    bottom: 351px;
+}
+
+.mux-wb {
+    font-size: 8pt;
+    position: absolute;
+    left: 1015px;
+    bottom: 315px;
 }
 
 .mux_pc {
@@ -246,9 +239,44 @@
     bottom: 290px;
 }
 
+.mux_pc_imm {
+    font-size: 8pt;
+    position: absolute;
+    left: 36px;
+    bottom: 512px;
+}
+
+.mux_rs1_imm {
+    font-size: 8pt;
+    position: absolute;
+    left: 595px;
+    bottom: 512px;
+}
+
+.forward_mux_rs1 {
+    font-size: 8pt;
+    position: absolute;
+    left: 553px;
+    bottom: 332px;
+}
+
+.forward_mux_rs2 {
+    font-size: 8pt;
+    position: absolute;
+    left: 553px;
+    bottom: 252px;
+}
+
 .plus-4 {
     font-size: 10pt;
     position: absolute;
     left: 127px;
-    bottom: 451px;
+    bottom: 456px;
+}
+
+.adder_imm_rs1 {
+    font-size: 8pt;
+    position: absolute;
+    left: 637px;
+    bottom: 535px;
 }

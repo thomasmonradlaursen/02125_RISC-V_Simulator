@@ -172,6 +172,8 @@ impl Model {
                 <>
                 <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
                 <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
+                <div class="forward_mux_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
+                <div class="forward_mux_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
                 </>
             }
         }
@@ -187,6 +189,8 @@ impl Model {
             return html!{
                 <>
                 <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
+                <div class="forward_mux_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
+                <div class="forward_mux_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
                 </>
             }
         }
@@ -202,16 +206,18 @@ impl Model {
             <div class="memwb">{"MEM/WB"}</div>
             <div class="pc">{"PC"}</div>
             <div class="alu">{"ALU"}</div>
-            <div class="mux-alu">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="mux-alu_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="mux-alu_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="mux-wb">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="reg">{"Registers"}</div>
             <div class="data-mem">{"Data"}<br/>{"memory"}</div>
             <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
             <div class="imm-gen">{"Immidiate"}<br/>{"generator"}</div>
             <div class="control">{"Control"}</div>
-            <div class="adder_pc">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="mux_pc_imm">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="mux_rs1_imm">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="mux_pc">{"M"}<br/>{"U"}<br/>{"X"}</div>
-            <div class="adder_pc_imm">{"A"}<br/>{"D"}<br/>{"D"}</div>
+            <div class="adder_imm_rs1">{"A"}<br/>{"D"}<br/>{"D"}</div>
             <div class="plus-4">{"+ 4"}</div>
             </>
         }
