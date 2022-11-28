@@ -212,7 +212,7 @@ impl Model {
             <div class="reg">{"Registers"}</div>
             <div class="data-mem">{"Data"}<br/>{"memory"}</div>
             <div class="instr-mem">{"Instruction"}<br/>{"memory"}</div>
-            <div class="imm-gen">{"Immidiate"}<br/>{"generator"}</div>
+            <div class="imm-gen">{"Immediate"}<br/>{"generator"}</div>
             <div class="control">{"Control"}</div>
             <div class="mux_pc_imm">{"M"}<br/>{"U"}<br/>{"X"}</div>
             <div class="mux_rs1_imm">{"M"}<br/>{"U"}<br/>{"X"}</div>
