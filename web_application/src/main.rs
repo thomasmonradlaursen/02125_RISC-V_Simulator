@@ -1,5 +1,5 @@
-use simulator_engine::SimulatorEngine;
-use graphics::{components, pipelines};
+use engine::simulator::SimulatorEngine;
+use graphics::pipelines;
 use misc::printer;
 
 use web_sys::{Event, HtmlInputElement, HtmlCanvasElement, WebGlRenderingContext as GL};
@@ -14,7 +14,6 @@ use gloo_render::{request_animation_frame, AnimationFrame};
 pub mod engine;
 pub mod graphics;
 pub mod misc;
-pub mod simulator_engine;
 
 pub enum Msg {
     LoadedBytes(String, Vec<u8>),

@@ -1,36 +1,8 @@
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="utf-8">
     <title>RISC-V Pipeline Simulator</title>
-    <link rel="stylesheet" href="/style-64ec969084f7c326.css">
-    <base href="/">
+    <link rel="stylesheet" href="/02125_RISC-V_Processor/style-64ec969084f7c326.css">
   
-<link rel="preload" href="/web_application-b2f3adc280900d9d_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
-<link rel="modulepreload" href="/web_application-b2f3adc280900d9d.js"></head>
-<body><script type="module">import init from '/web_application-b2f3adc280900d9d.js';init('/web_application-b2f3adc280900d9d_bg.wasm');</script><script>(function () {
-    var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    var url = protocol + '//' + window.location.host + '/_trunk/ws';
-    var poll_interval = 5000;
-    var reload_upon_connect = () => {
-        window.setTimeout(
-            () => {
-                // when we successfully reconnect, we'll force a
-                // reload (since we presumably lost connection to
-                // trunk due to it being killed, so it will have
-                // rebuilt on restart)
-                var ws = new WebSocket(url);
-                ws.onopen = () => window.location.reload();
-                ws.onclose = reload_upon_connect;
-            },
-            poll_interval);
-    };
-
-    var ws = new WebSocket(url);
-    ws.onmessage = (ev) => {
-        const msg = JSON.parse(ev.data);
-        if (msg.reload) {
-            window.location.reload();
-        }
-    };
-    ws.onclose = reload_upon_connect;
-})()
-</script></body></html>
+<link rel="preload" href="/02125_RISC-V_Processor/web_application-fde7045a7ccb9aa0_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/02125_RISC-V_Processor/web_application-fde7045a7ccb9aa0.js"></head>
+<body><script type="module">import init from '/02125_RISC-V_Processor/web_application-fde7045a7ccb9aa0.js';init('/02125_RISC-V_Processor/web_application-fde7045a7ccb9aa0_bg.wasm');</script></body></html>

@@ -1,4 +1,4 @@
-use crate::components;
+use crate::graphics::components;
 
 pub fn hazard_forwarding_unit() -> Vec<f32> {
     let mut res: Vec<f32> = vec![];
