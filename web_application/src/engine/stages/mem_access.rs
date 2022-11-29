@@ -1,8 +1,4 @@
-use crate::{
-    control::Control,
-    execute::Computation,
-    registers::{EXMEM, MEMWB},
-};
+use crate::engine::{components::{control::Control, registers::{EXMEM, MEMWB}}, stages::execute::Computation};
 use gloo_dialogs;
 
 #[derive(Debug, Clone, Copy)]

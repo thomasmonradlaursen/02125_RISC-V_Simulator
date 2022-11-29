@@ -1,4 +1,4 @@
-use crate::{registers::{IDEX, EXMEM}};
+use crate::engine::components::registers::{IDEX, EXMEM};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Computation {

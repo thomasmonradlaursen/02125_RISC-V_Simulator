@@ -10,7 +10,6 @@ pub fn to_assembly(instruction: &i32) -> String {
     let shamt = (instruction >> 20) & 0x01f;
 
     match opcode {
-        // TODO - Fix to something nicer...
         0x00 => match funct3 {
             0x00 => {
                 return format!("");
@@ -34,19 +33,19 @@ pub fn to_assembly(instruction: &i32) -> String {
 
         0x03 => match funct3 {
             0x00 => {
-                return format!("LB x{}, {}(x{})", rd, imm110, rs1);
+                return format!("lb x{} {}(x{})", rd, imm110, rs1);
             }
             0x01 => {
-                return format!("LH x{}, {}(x{})", rd, imm110, rs1);
+                return format!("lh x{} {}(x{})", rd, imm110, rs1);
             }
             0x02 => {
-                return format!("LW x{}, {}(x{})", rd, imm110, rs1);
+                return format!("lw x{} {}(x{})", rd, imm110, rs1);
             }
             0x04 => {
-                return format!("LBU x{}, {}(x{})", rd, imm110, rs1);
+                return format!("lbu x{} {}(x{})", rd, imm110, rs1);
             }
             0x05 => {
-                return format!("LHU x{}, {}(x{})", rd, imm110, rs1);
+                return format!("lhu x{} {}(x{})", rd, imm110, rs1);
             }
             _ => {
                 return format!("Unknown instruction")
@@ -54,56 +53,56 @@ pub fn to_assembly(instruction: &i32) -> String {
         },
         0x13 => match funct3 {
             0x00 => {
-                return format!("ADDI x{}, x{}, {}", rd, rs1, imm110);
+                return format!("addi x{} x{} {}", rd, rs1, imm110);
             }
             0x01 => {
-                return format!("SLLI x{}, x{}, {}", rd, rs1, shamt);
+                return format!("slli x{} x{} {}", rd, rs1, shamt);
             }
             0x02 => {
-                return format!("SLTI x{}, x{}, {}", rd, rs1, imm110);
+                return format!("slti x{} x{} {}", rd, rs1, imm110);
             }
             0x03 => {
-                return format!("SLTIU x{}, x{}, {}", rd, rs1, imm110);
+                return format!("sltiu x{} x{} {}", rd, rs1, imm110);
             }
             0x04 => {
-                return format!("XORI x{}, x{}, {}", rd, rs1, imm110);
+                return format!("xori x{} x{} {}", rd, rs1, imm110);
             }
             0x05 => match funct7 {
                 0x00 => {
-                    return format!("SRLI x{}, x{}, {}", rd, rs1, shamt);
+                    return format!("slri x{} x{} {}", rd, rs1, shamt);
                 }
                 0x20 => {
-                    return format!("SRAI x{}, x{}, {}", rd, rs1, shamt);
+                    return format!("srai x{} x{} {}", rd, rs1, shamt);
                 }
                 _ => {
                     return format!("Unknown instruction")
                 }
             },
             0x06 => {
-                return format!("ORI x{}, x{}, {}", rd, rs1, imm110);
+                return format!("ori x{} x{} {}", rd, rs1, imm110);
             }
             0x07 => {
-                return format!("ANDI x{}, x{}, {}", rd, rs1, imm110);
+                return format!("andi x{} x{} {}", rd, rs1, imm110);
             }
             _ => {
                 return format!("Unknown instruction")
             }
         },
         0x17 => {
-            return format!("AUIPC x{}, {}", rd, imm3112);
+            return format!("auipc x{} {}", rd, imm3112);
         }
         0x23 => match funct3 {
             0x00 => {
                 let offset = s_format(&instruction);
-                return format!("SB x{}, {}(x{})", rs2, offset, rs1);
+                return format!("sb x{} {}(x{})", rs2, offset, rs1);
             }
             0x01 => {
                 let offset = s_format(&instruction);
-                return format!("SH x{}, {}(x{})", rs2, offset, rs1);
+                return format!("sh x{} {}(x{})", rs2, offset, rs1);
             }
             0x02 => {
                 let offset = s_format(&instruction);
-                return format!("SW x{}, {}(x{})", rs2, offset, rs1);
+                return format!("sw x{} {}(x{})", rs2, offset, rs1);
             }
             _ => {
                 return format!("Unknown instruction")
@@ -112,69 +111,69 @@ pub fn to_assembly(instruction: &i32) -> String {
         0x33 => match funct3 {
             0x00 => match funct7 {
                 0x00 => {
-                    return format!("ADD x{}, x{}, x{}", rd, rs1, rs2);
+                    return format!("add x{} x{} x{}", rd, rs1, rs2);
                 }
                 0x20 => {
-                    return format!("SUB x{}, x{}, x{}", rd, rs1, rs2);
+                    return format!("sub x{} x{} x{}", rd, rs1, rs2);
                 }
                 _ => {
                     return format!("Unknown instruction")
                 }
             },
             0x01 => {
-                return format!("SLL x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("sll x{} x{} x{}", rd, rs1, rs2);
             }
             0x02 => {
-                return format!("SLT x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("slt x{} x{} x{}", rd, rs1, rs2);
             }
             0x03 => {
-                return format!("SLTIU x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("sltu x{} x{} x{}", rd, rs1, rs2);
             }
             0x04 => {
-                return format!("XOR x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("xor x{} x{} x{}", rd, rs1, rs2);
             }
             0x05 => match funct7 {
                 0x00 => {
-                    return format!("SRL x{}, x{}, x{}", rd, rs1, rs2);
+                    return format!("srl x{} x{} x{}", rd, rs1, rs2);
                 }
                 0x20 => {
-                    return format!("SRA x{}, x{}, x{}", rd, rs1, rs2);
+                    return format!("sra x{} x{} x{}", rd, rs1, rs2);
                 }
                 _ => {
                     return format!("Unknown instruction")
                 }
             },
             0x06 => {
-                return format!("OR x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("or x{} x{} x{}", rd, rs1, rs2);
             }
             0x07 => {
-                return format!("AND x{}, x{}, x{}", rd, rs1, rs2);
+                return format!("and x{} x{} x{}", rd, rs1, rs2);
             }
             _ => {
                 return format!("Unknown instruction")
             }
         },
         0x37 => {
-            return format!("LUI x{}, {}", rd, imm3112);
+            return format!("lui x{} {}", rd, imm3112);
         }
         0x63 => match funct3 {
             0x00 => {
-                return format!("BEQ x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("beq x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             0x01 => {
-                return format!("BNE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("bne x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             0x04 => {
-                return format!("BLT x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("blt x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             0x05 => {
-                return format!("BGE x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("bge x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             0x06 => {
-                return format!("BLTU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("bltu x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             0x07 => {
-                return format!("BGEU x{}, x{}, {}", rs1, rs2, sb_format(&instruction));
+                return format!("bgeu x{} x{} {}", rs1, rs2, sb_format(&instruction));
             }
             _ => {
                 return format!("Unknown instruction")
@@ -182,17 +181,17 @@ pub fn to_assembly(instruction: &i32) -> String {
         },
         0x67 => match funct3 {
             0x00 => {
-                return format!("JALR x{}, x{}, {}", rd, rs1, imm110);
+                return format!("jalr x{} x{} {}", rd, rs1, imm110);
             }
             _ => {
                 return format!("Unknown instruction")
             }
         },
         0x6F => {
-            return format!("JAL x{}, {}", rd, uj_format(&instruction));
+            return format!("jal x{} {}", rd, uj_format(&instruction));
         }
         0x73 => {
-            return format!("ECALL");
+            return format!("ecall");
         }
         _ => return format!("Unknown instruction"),
     }
@@ -218,54 +217,6 @@ fn s_format(instruction: &i32) -> i32 {
     let bit40 = (instruction >> 7) & 0x1f;
     let bit115 = (instruction >> 25) << 5;
     bit40 | bit115
-}
-
-pub fn print_mem_instructions(mem: &[u8], len: &usize) {
-    let mut count = 0;
-    while count < *len {
-        print!("{:08b} ", mem[count]);
-        count = count + 1;
-        if count % 4 == 0 {
-            println!();
-        }
-    }
-}
-
-pub fn print_registers(registers: &[i32; 32]) {
-    let mut count = 0;
-    for register in registers {
-        println!("Reg[{:>2}]: {:>10}", count, register);
-        count += 1;
-    }
-}
-
-pub fn print_registers_as_char(registers: &[i32; 32]) {
-    let mut count = 0;
-    for register in registers {
-        println!("Reg[{:>2}]: {:?}", count, (*register as u8) as char);
-        count += 1;
-    }
-}
-
-pub fn print_registers_not_zero(registers: &[i32; 32]) {
-    let mut count = 0;
-    let zero = 0;
-    println!("Registers of none-zero value:");
-    for register in registers {
-        if *register != zero {
-            println!("Reg[{:>2}]: {:>5}", count, register);
-        }
-        count += 1;
-    }
-    println!();
-}
-
-pub fn print_program_info(filename: &String, program_len: &usize) {
-    println!("______________________________________");
-    println!("Acorn - RISC-V Pipeline Simulator");
-    println!("Binary from file: {}", filename);
-    println!("Length of binary: {}", program_len);
-    println!("______________________________________");
 }
 
 pub fn instructions_as_assembly(bytes: &Vec<u8>) -> Vec<String> {

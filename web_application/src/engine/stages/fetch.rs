@@ -1,4 +1,4 @@
-use crate::registers::{IFID};
+use crate::engine::components::registers::IFID;
 
 pub fn fetch_to_register(pc: &mut usize, fetch: &mut IFID, mem: &[u8], program_len: &usize) {
     if *pc <= *program_len {

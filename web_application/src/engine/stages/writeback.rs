@@ -1,4 +1,4 @@
-use crate::registers::{MEMWB};
+use crate::engine::components::registers::MEMWB;
 
 pub fn writeback(wb: &MEMWB, reg: &mut [i32; 32], running: &mut bool, program_len: &usize) {
     if !(wb.pc < *program_len) {

@@ -1,9 +1,8 @@
-use crate::forward;
-use crate::hazard;
-use crate::registers::{EXMEMReg, IDEXReg, IFIDReg, MEMWBReg};
-use crate::{decode, execute, fetch, mem_access, printer, writeback};
+use crate::engine::components::{forward, hazard, registers::{EXMEMReg, IDEXReg, IFIDReg, MEMWBReg}};
+use crate::engine::stages::{decode, execute, fetch, mem_access, writeback};
 
 use gloo_dialogs;
+
 pub struct SimulatorEngine {
     // Registers and memory
     pub reg: [i32; 32],
@@ -72,8 +71,6 @@ impl SimulatorEngine {
 
             let next_instruction = &self.mem[(self.pc)..(self.pc + 4)];
 
-            println!("Cycle number: {}", self.cycles);
-
             // Print state of pipeline registers
             // NEEDS TO BE FIXED:
             self.pc_instruction = i32::from_le_bytes([
@@ -82,15 +79,6 @@ impl SimulatorEngine {
                 self.mem[self.pc + 2],
                 self.mem[self.pc + 3],
             ]);
-            println!(
-                "Fetch:\nInstruction: {}\nPC: {}\n",
-                printer::to_assembly(&fetch::fetch_instruction(&next_instruction)),
-                self.pc
-            );
-            self.if_id.print_decode();
-            self.id_ex.print_execute();
-            self.ex_mem.print_mem();
-            self.mem_wb.print_wb();
 
             // Run pipeline
 
@@ -106,8 +94,6 @@ impl SimulatorEngine {
                     &mut self.id_ex.decode,
                     &self.reg,
                 );
-            } else {
-                println!("Stalling fetch and decode");
             }
 
             execute::execute_to_register(
@@ -208,8 +194,6 @@ impl SimulatorEngine {
                 );
             }
 
-            printer::print_registers_not_zero(&self.reg);
-
             if self.stall {
                 self.id_ex.execute = Default::default();
                 self.id_ex.execute.instruction = 0x3000;
@@ -228,10 +212,7 @@ impl SimulatorEngine {
             if stepwise {
                 break;
             }
-
-            println!("______________________________________");
         }
-        println!("Execution terminated.");
     }
 
     pub fn read_bytes_to_mem(&mut self, data: &Vec<u8>) {

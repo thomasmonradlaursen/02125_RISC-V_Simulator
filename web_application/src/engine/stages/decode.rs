@@ -1,7 +1,4 @@
-use crate::{
-    control::Control,
-    registers::{IFID, IDEX}
-};
+use crate::engine::components::{control::Control, registers::{IFID, IDEX}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Decoding {

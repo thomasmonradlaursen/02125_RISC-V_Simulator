@@ -1,4 +1,6 @@
-use mylib::{simulator_engine::SimulatorEngine, printer, pipelines};
+use simulator_engine::SimulatorEngine;
+use graphics::{components, pipelines};
+use misc::printer;
 
 use web_sys::{Event, HtmlInputElement, HtmlCanvasElement, WebGlRenderingContext as GL};
 use yew::{html, html::Scope, html::TargetCast, Component, Context, Html, NodeRef};
@@ -8,6 +10,11 @@ use gloo_file::callbacks::FileReader;
 use gloo_file::File;
 
 use gloo_render::{request_animation_frame, AnimationFrame};
+
+pub mod engine;
+pub mod graphics;
+pub mod misc;
+pub mod simulator_engine;
 
 pub enum Msg {
     LoadedBytes(String, Vec<u8>),
@@ -86,7 +93,7 @@ impl Component for Model {
                 true
             }
             Msg::Render => {
-                self.render_datapath(ctx.link(), include_str!("./basic.frag"));
+                self.render_datapath(ctx.link(), include_str!("graphics/basic.frag"));
                 false
             }
             Msg::Forwarding => {
@@ -271,7 +278,7 @@ impl Model {
     fn render_datapath(&mut self, link: &Scope<Self>, frag: &str) {
         let gl = self.gl.as_ref().expect("GL Context not initialized!");
 
-        let vert_code = include_str!("./basic.vert");
+        let vert_code = include_str!("graphics/basic.vert");
         let frag_code = frag;
 
         // This list of vertices will draw two triangles to cover the entire canvas.

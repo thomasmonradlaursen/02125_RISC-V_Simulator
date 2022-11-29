@@ -1,4 +1,4 @@
-use crate::registers::{EXMEM, IDEX, IFID, MEMWB};
+use crate::engine::components::registers::{EXMEM, IDEX, IFID, MEMWB};
 
 pub fn ex_forward(decode: &IDEX, execute: &EXMEM, forward_a: &mut u8, forward_b: &mut u8) {
     println!("Fowarding from execution:");

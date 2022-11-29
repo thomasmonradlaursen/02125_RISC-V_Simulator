@@ -1,4 +1,4 @@
-use crate::registers::{EXMEM, IDEX, IFID, MEMWB};
+use crate::engine::components::registers::{EXMEM, IDEX, IFID, MEMWB};
 
 pub fn ex_hazard(decode: &IDEX, execute: &EXMEM, stall: &mut bool) {
     println!("Execution hazards:");
