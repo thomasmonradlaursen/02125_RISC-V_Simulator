@@ -92,7 +92,7 @@ impl Component for Model {
                 true
             }
             Msg::Render => {
-                self.render_datapath(ctx.link(), include_str!("graphics/basic.frag"));
+                self.render_datapath(ctx.link());
                 false
             }
             Msg::Forwarding => {
@@ -274,11 +274,22 @@ impl Model {
             </div>
         }
     }
-    fn render_datapath(&mut self, link: &Scope<Self>, frag: &str) {
+    fn render_datapath(&mut self, link: &Scope<Self>) {
         let gl = self.gl.as_ref().expect("GL Context not initialized!");
 
-        let vert_code = include_str!("graphics/basic.vert");
-        let frag_code = frag;
+        let vert_code = "precision mediump float;
+        attribute vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }";
+        let frag_code = "precision mediump float;
+        uniform float u_time;
+        void main() {
+            float r = 0.0;
+            float g = 0.0;
+            float b = 0.0;
+            gl_FragColor = vec4(r, g, b, 1.0);
+        }";
 
         // This list of vertices will draw two triangles to cover the entire canvas.
 
