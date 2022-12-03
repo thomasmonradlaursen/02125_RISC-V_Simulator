@@ -138,7 +138,7 @@ fn run_engine(
                 &mut forward_b,
             );
             forward::mem_hazard(&id_ex.decode, &mem_wb.mem, &mut forward_a, &mut forward_b);
-            forward::load_use_forward(&if_id.decode, &ex_mem.mem, &mut forward_a, &mut forward_b);
+            forward::load_use_forward(&id_ex.decode, &mem_wb.mem, &mut forward_a, &mut forward_b);
         }
 
         // Update register values for next iteration

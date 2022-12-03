@@ -145,15 +145,15 @@ impl SimulatorEngine {
                     &mut self.forward_a,
                     &mut self.forward_b,
                 );
-                forward::mem_hazard(
+                forward::mem_forward(
                     &self.id_ex.decode,
                     &self.mem_wb.mem,
                     &mut self.forward_a,
                     &mut self.forward_b,
                 );
-                forward::load_use_forward(
-                    &self.if_id.decode,
-                    &self.ex_mem.mem,
+                forward::load_forward(
+                    &self.id_ex.decode,
+                    &self.mem_wb.mem,
                     &mut self.forward_a,
                     &mut self.forward_b,
                 );
