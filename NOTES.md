@@ -19,3 +19,5 @@ See page 294 and 318 in Computer Organization and Design
 ### Web application
 Note: The default stack size of a web application is 256 KB according to https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/iis/site-behavior-performance/default-maximum-stack-size-thread
 Overall, it should properly be considered if the memory should be less.
+
+NOTE: Some MIME types are not allowed on GitHub Pages (maybe web in general). Using the !include_str macro to import OpenGL vertices and fragment shaders will generate an "MIME type html/text not allowed" error. This can be avoid be directly writing the string into the program. Reason for this could be potential injection attacks, but I am not sure.
