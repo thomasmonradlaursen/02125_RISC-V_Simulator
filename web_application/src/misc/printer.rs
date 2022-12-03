@@ -223,7 +223,7 @@ pub fn instructions_as_assembly(bytes: &Vec<u8>) -> Vec<String> {
     let mut instructions: Vec<String> = vec![];
     let mut i = 0;
     if bytes.len() > 0 {
-        while i < bytes.len()-4 {
+        while i < bytes.len() {
             let bytes: [u8; 4] = [bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]];
             instructions.push(to_assembly(&i32::from_le_bytes(bytes)));
             i += 4;
