@@ -123,8 +123,8 @@ fn run_engine(
             hazard::control_hazard(&mut if_id.fetch, &mut id_ex.decode, &branch);
             if !enable_forwarding {
                 hazard::load_use_hazard_extended(&if_id.decode, &ex_mem.mem, &mut stall);
-                hazard::ex_hazard(&id_ex.decode, &ex_mem.execute, &mut stall);
-                hazard::mem_hazard(&id_ex.decode, &ex_mem.execute, &mem_wb.mem, &mut stall);
+                hazard::ex_hazard(&if_id.decode, &id_ex.execute, &mut stall);
+                hazard::mem_hazard(&if_id.decode, &ex_mem.mem, &mut stall);
             }
         }
 

@@ -1,6 +1,6 @@
-use crate::registers::{EXMEM, IDEX, IFID, MEMWB};
+use crate::registers::{EXMEM, IDEX, IFID};
 
-pub fn ex_hazard(decode: &IDEX, execute: &EXMEM, stall: &mut bool) {
+pub fn ex_hazard(decode: &IFID, execute: &IDEX, stall: &mut bool) {
     println!("Execution hazards:");
     if execute.control.reg_write && (execute.rd != 0) {
         if execute.rd == decode.rs1 {
@@ -14,23 +14,17 @@ pub fn ex_hazard(decode: &IDEX, execute: &EXMEM, stall: &mut bool) {
     }
 }
 
-pub fn mem_hazard(decode: &IDEX, execute: &EXMEM, mem: &MEMWB, stall: &mut bool) {
+pub fn mem_hazard(decode: &IFID, mem: &EXMEM, stall: &mut bool) {
     println!("Memory hazards:");
-    if mem.control.reg_write
-        && (mem.rd != 0)
-        && !(execute.control.reg_write && (execute.rd != 0) && (execute.rd != decode.rs1))
-        && (mem.rd == decode.rs1)
-    {
-        println!("MEM/WB rd: {} = ID/EX rs1: {}", mem.rd, decode.rs1);
-        *stall = true;
-    }
-    if mem.control.reg_write
-        && (mem.rd != 0)
-        && !(execute.control.reg_write && (execute.rd != 0) && (execute.rd != decode.rs2))
-        && (mem.rd == decode.rs2)
-    {
-        println!("MEM/WB rd: {} = ID/EX rs2: {}", mem.rd, decode.rs2);
-        *stall = true;
+    if mem.control.reg_write  && (mem.rd != 0) {
+        if mem.rd == decode.rs1 {
+            println!("MEM/WB rd: {} = ID/EX rs1: {}", mem.rd, decode.rs1);
+            *stall = true;
+        }
+        if mem.rd == decode.rs2 {
+            println!("MEM/WB rd: {} = ID/EX rs2: {}", mem.rd, decode.rs2);
+            *stall = true;
+        }
     }
 }
 
