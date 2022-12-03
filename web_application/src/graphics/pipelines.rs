@@ -1,23 +1,5 @@
 use crate::graphics::components;
 
-pub fn hazard_forwarding_unit() -> Vec<f32> {
-    let mut res: Vec<f32> = vec![];
-    let mut hazard_unit: Vec<f32> = hazard_unit();
-    let mut forwarding_unit: Vec<f32> = forwarding_unit();
-    res.append(&mut hazard_unit);
-    res.append(&mut forwarding_unit);
-    res
-}
-
-pub fn hazard_only_unit() -> Vec<f32> {
-    let mut res: Vec<f32> = vec![];
-    let mut hazard_unit: Vec<f32> = hazard_unit();
-    let mut hazard_replace_unit: Vec<f32> = forwarding_unit();
-    res.append(&mut hazard_unit);
-    res.append(&mut hazard_replace_unit);
-    res
-}
-
 pub fn hazard_unit() -> Vec<f32> {
     let (width, height) = (1160.0, 600.0);
     let hazard_unit: Vec<f32> = components::config_unit(290.0, 510.0, width, height);
@@ -264,15 +246,6 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_alu_branch_hazard_4: Vec<f32> = components::wire((250.0, 80.0), (250.0, 520.0), width, height);
     let wire_alu_branch_hazard_5: Vec<f32> = components::wire((250.0, 520.0), (290.0, 520.0), width, height);
 
-    let wire_hazard_replace_idex_1: Vec<f32> = components::wire((460.0, 40.0), (655.0, 40.0), width, height);
-    let wire_hazard_replace_idex_2: Vec<f32> = components::wire((460.0, 40.0), (460.0, 110.0), width, height);
-
-    let wire_hazard_replace_ifid_1: Vec<f32> = components::wire((230.0, 30.0), (655.0, 30.0), width, height);
-    let wire_hazard_replace_ifid_2: Vec<f32> = components::wire((230.0, 30.0), (230.0, 110.0), width, height);
-
-    let wire_hazard_replace_pc_1: Vec<f32> = components::wire((85.0, 20.0), (655.0, 20.0), width, height);
-    let wire_hazard_replace_pc_2: Vec<f32> = components::wire((85.0, 20.0), (85.0, 260.0), width, height);
-
     let wire_hazard_idex_rd_1: Vec<f32> = components::wire((480.0, 120.0), (480.0, 70.0), width, height);
     let wire_hazard_idex_rd_2: Vec<f32> = components::wire((480.0, 70.0), (330.0, 70.0), width, height);
     let wire_hazard_idex_rd_3: Vec<f32> = components::wire((330.0, 70.0), (330.0, 510.0), width, height);
@@ -287,7 +260,25 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     let wire_exmem_control_hazard_7: Vec<f32> = components::wire((520.0, 560.0), (380.0, 560.0), width, height);
     
     // Add forwarding / hazard components
-    if forwarding || hazard {
+
+    if forwarding {
+        components.push(wire_exmem_res_forward_1);
+        components.push(wire_exmem_res_forward_2);
+        components.push(wire_exmem_res_forward_3);
+        components.push(wire_exmem_res_forward_4);
+        components.push(wire_exmem_res_forward_5);
+        components.push(wire_exmem_res_forward_6);
+        components.push(wire_exmem_res_forward_7);
+        components.push(wire_memwb_res_forward_1);
+        components.push(wire_memwb_res_forward_2);
+        components.push(wire_memwb_res_forward_3);
+        components.push(wire_forward_mux_rs1_1);
+        components.push(wire_forward_mux_rs1_2);
+        components.push(wire_forward_mux_rs1_3);
+        components.push(wire_forward_mux_rs1_4);
+        components.push(wire_forward_mux_rs2_1);
+        components.push(wire_forward_mux_rs2_2);
+        // Moving from hazard and forwarding
         components.push(wire_exmem_rd_forward_1);
         components.push(wire_exmem_rd_forward_2);
         components.push(wire_memwb_rd_forward_1);
@@ -310,25 +301,6 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
         components.push(wire_exmem_control_forward_3);
         components.push(wire_exmem_control_forward_4);
         components.push(wire_exmem_control_forward_5);
-    }
-
-    if forwarding {
-        components.push(wire_exmem_res_forward_1);
-        components.push(wire_exmem_res_forward_2);
-        components.push(wire_exmem_res_forward_3);
-        components.push(wire_exmem_res_forward_4);
-        components.push(wire_exmem_res_forward_5);
-        components.push(wire_exmem_res_forward_6);
-        components.push(wire_exmem_res_forward_7);
-        components.push(wire_memwb_res_forward_1);
-        components.push(wire_memwb_res_forward_2);
-        components.push(wire_memwb_res_forward_3);
-        components.push(wire_forward_mux_rs1_1);
-        components.push(wire_forward_mux_rs1_2);
-        components.push(wire_forward_mux_rs1_3);
-        components.push(wire_forward_mux_rs1_4);
-        components.push(wire_forward_mux_rs2_1);
-        components.push(wire_forward_mux_rs2_2);
     }
     
     if hazard {
@@ -364,12 +336,6 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
         components.push(wire_exmem_control_hazard_5);
         components.push(wire_exmem_control_hazard_6);
         components.push(wire_exmem_control_hazard_7);
-        components.push(wire_hazard_replace_idex_1);
-        components.push(wire_hazard_replace_idex_2);
-        components.push(wire_hazard_replace_ifid_1);
-        components.push(wire_hazard_replace_ifid_2);
-        components.push(wire_hazard_replace_pc_1);
-        components.push(wire_hazard_replace_pc_2);
     }
 
     // Add registers to list of components
@@ -495,13 +461,10 @@ pub fn simple_pipeline(hazard: bool, forwarding: bool) -> Vec<f32> {
     components.push(wire_memwb_rd_reg_5);
 
     // Hazard and forwarding units
-    if hazard && forwarding {
-        components.push(hazard_forwarding_unit());
+    if hazard {
+        components.push(hazard_unit());
     }
-    else if hazard {
-        components.push(hazard_only_unit());
-    }
-    else if forwarding {
+    if forwarding {
         components.push(forwarding_unit());
     }
 

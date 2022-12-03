@@ -173,34 +173,29 @@ impl Component for Model {
 
 impl Model {
     fn label_configs(hazard: &bool, forwarding: &bool) -> Html {
+        let hazard_html: Html = html!{
+            <>
+            <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
+            </>
+        };
+        let forwarding_html: Html = html!{
+            <>
+            <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
+            <div class="forward_mux_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            <div class="forward_mux_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
+            </>
+        };
         if *hazard && *forwarding {
-            return html!{
-                <>
-                <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
-                <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
-                <div class="forward_mux_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
-                <div class="forward_mux_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
-                </>
-            }
+            return html!{<>{hazard_html} {forwarding_html}</>};
         }
-        if *hazard {
-            return html!{
-                <>
-                <div class="hazard">{"Hazard"}<br/>{"unit"}</div>
-                <div class="hazard_replace">{"Hazard"}<br/>{"unit"}</div>
-                </>
-            }
+        else if *hazard {
+            return hazard_html;
+        } 
+        else if *forwarding {
+            return forwarding_html;
+        } else {
+            return html!{};
         }
-        if *forwarding {
-            return html!{
-                <>
-                <div class="forwarding">{"Forwarding"}<br/>{"unit"}</div>
-                <div class="forward_mux_rs1">{"M"}<br/>{"U"}<br/>{"X"}</div>
-                <div class="forward_mux_rs2">{"M"}<br/>{"U"}<br/>{"X"}</div>
-                </>
-            }
-        }
-        html!{}
     }
     
     fn label_datapath() -> Html {

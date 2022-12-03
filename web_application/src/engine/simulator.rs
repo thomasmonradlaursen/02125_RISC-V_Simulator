@@ -127,11 +127,10 @@ impl SimulatorEngine {
                         &self.ex_mem.mem,
                         &mut self.stall,
                     );
-                    hazard::ex_hazard(&self.id_ex.decode, &self.ex_mem.execute, &mut self.stall);
+                    hazard::ex_hazard(&self.if_id.decode, &self.id_ex.execute, &mut self.stall);
                     hazard::mem_hazard(
-                        &self.id_ex.decode,
-                        &self.ex_mem.execute,
-                        &self.mem_wb.mem,
+                        &self.if_id.decode,
+                        &self.ex_mem.mem,
                         &mut self.stall,
                     );
                 }
