@@ -45,13 +45,11 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation, control: &Contro
         alu_carry: computation.carry,
     };
 
-    let address: usize = (computation.result % mem.len() as i32) as usize;
+    let address: usize = computation.result as usize % mem.len();
 
     // NOTE: Handling of access outside the array must be handled.
     // Solution: Warn user aware of problem, and then do nothing for this stage.
-    if issue_warning(mem, control, computation, &address) {
-        return memory_result;
-    }
+    issue_warning(mem, control, computation, &address);
 
     match computation.mem_opcode {
         0x03 => match computation.mem_funct3 {
@@ -131,15 +129,12 @@ pub fn access_memory(mem: &mut [u8], computation: &Computation, control: &Contro
     memory_result
 }
 
-fn issue_warning(mem: &mut [u8], control: &Control, computation: &Computation, address: &usize) -> bool {
-    let mut res = false;
+fn issue_warning(mem: &mut [u8], control: &Control, computation: &Computation, address: &usize) {
     if computation.result < 0 || computation.result > mem.len() as i32 {
-        if control.mem_read {
-            res = true;
+        if control.mem_read || control.mem_write {
             let mut message = format!("WARNING: Index {} out of bound with memory size of {}.\n", computation.result, mem.len());
-            message.push_str(&format!("Memory will be accessed or updated at address at {} % {} = {}", computation.result, mem.len(), address)[..]);
+            message.push_str(&format!("Memory will be accessed or updated at address at {} % {} = {}", computation.result as usize, mem.len(), address)[..]);
             gloo_dialogs::alert(&message[..]);
         }
     }
-    res
 }
