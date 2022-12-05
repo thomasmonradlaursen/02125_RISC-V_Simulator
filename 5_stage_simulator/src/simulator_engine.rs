@@ -112,6 +112,7 @@ fn run_engine(
             &mut ex_mem.execute,
             &mut pc_src,
             &mut branch,
+            &mut running,
         );
 
         mem_access::memory_to_register(&mut ex_mem.mem, &mut mem_wb.mem, mem);

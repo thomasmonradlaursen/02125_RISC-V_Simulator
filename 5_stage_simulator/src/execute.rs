@@ -24,17 +24,17 @@ pub fn update_for_memory(execute: &mut EXMEM, mem: &mut EXMEM) {
     mem.computation = execute.computation;
 }
 
-pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool) {
+pub fn execute_to_register(execute_a: &mut IDEX, execute_b: &mut EXMEM, pc_src: &mut usize, branch: &mut bool, running: &mut bool) {
     execute_b.instruction = execute_a.instruction;
     execute_b.pc = execute_a.pc;
     execute_b.rd = execute_a.rd;
     execute_b.rs1 = execute_a.rs1;
     execute_b.rs2 = execute_a.rs2;
-    execute_b.computation = execute_instruction(pc_src, execute_a, branch);
+    execute_b.computation = execute_instruction(pc_src, execute_a, branch, running);
     execute_b.control = execute_a.control;
 }
 
-pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool) -> Computation {
+pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bool, running: &mut bool) -> Computation {
     let mut computation = Computation{result: 0, carry: 0, mem_opcode: 0, mem_funct3: 0};
     match execute_a.decoding.opcode {
         0x00 => match execute_a.decoding.funct3 {
@@ -213,6 +213,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         0x63 => match execute_a.decoding.funct3 {
             0x00 => {
                 if execute_a.decoding.rs1 == execute_a.decoding.rs2 {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -220,6 +221,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x01 => {
                 if execute_a.decoding.rs1 != execute_a.decoding.rs2 {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -227,6 +229,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x04 => {
                 if execute_a.decoding.rs1 < execute_a.decoding.rs2 {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -234,6 +237,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x05 => {
                 if execute_a.decoding.rs1 >= execute_a.decoding.rs2 {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -241,6 +245,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x06 => {
                 if (execute_a.decoding.rs1 as u32) < (execute_a.decoding.rs2 as u32) {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -248,6 +253,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             }
             0x07 => {
                 if (execute_a.decoding.rs1 as u32) >= (execute_a.decoding.rs2 as u32) {
+                    instruction_misalignemnt(&execute_a.decoding.sb_offset, running);
                     *pc_src = execute_a.pc + execute_a.decoding.sb_offset as usize;
                     *branch = true;
                 }
@@ -257,6 +263,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         },
         0x67 => match execute_a.decoding.funct3 {
             0x00 => {
+                instruction_misalignemnt(&execute_a.decoding.imm110, running);
                 computation.result = execute_a.pc as i32 + 4;
                 *pc_src = (execute_a.decoding.rs1 + execute_a.decoding.imm110) as usize;
                 *branch = true;
@@ -265,6 +272,7 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
             _ => (),
         },
         0x6F => {
+            instruction_misalignemnt(&execute_a.decoding.uj_offset, running);
             computation.result = execute_a.pc as i32 + 4;
             *pc_src = execute_a.pc + execute_a.decoding.uj_offset as usize;
             *branch = true;
@@ -285,4 +293,10 @@ pub fn execute_instruction(pc_src: &mut usize, execute_a: &IDEX, branch: &mut bo
         }
     }
     computation
+}
+
+fn instruction_misalignemnt(offset: &i32, running: &mut bool) {
+    if offset % 4 != 0 {
+        *running = false;
+    }
 }
