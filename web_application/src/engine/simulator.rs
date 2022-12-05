@@ -103,6 +103,7 @@ impl SimulatorEngine {
                 &mut self.branch,
                 &self.reg,
                 &self.program_len,
+                &mut self.running
             );
 
             mem_access::memory_to_register(

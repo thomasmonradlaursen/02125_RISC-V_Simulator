@@ -28,7 +28,7 @@ pub fn mem_forward(decode: &IDEX, mem: &MEMWB, forward_a: &mut u8, forward_b: &m
 }
 
 pub fn load_forward(decode: &IDEX, mem: &MEMWB, forward_a: &mut u8, forward_b: &mut u8) {
-    if mem.control.mem_read {
+    if mem.control.mem_read && (mem.rd != 0) {
         if (mem.rd == decode.rs1) && *forward_a != 1{
             *forward_a = 3;
         }
