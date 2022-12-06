@@ -2,10 +2,13 @@ use web_application::misc::test_runner::{self, RegisterResult};
 
 const HAZARD: bool = true;
 const FORWARD: bool = true;
+const TO_FILE: bool = true;
 
 #[test]
 fn addi() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_addi.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_addi.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -15,7 +18,9 @@ fn addi() {
 
 #[test]
 fn andi() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_andi.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_andi.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -25,7 +30,9 @@ fn andi() {
 
 #[test]
 fn auipc() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_auipc.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_auipc.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -35,7 +42,9 @@ fn auipc() {
 
 #[test]
 fn ori() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_ori.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_ori.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -45,7 +54,9 @@ fn ori() {
 
 #[test]
 fn slli() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_slli.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_slli.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -55,7 +66,9 @@ fn slli() {
 
 #[test]
 fn slti() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_slti.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_slti.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -65,7 +78,9 @@ fn slti() {
 
 #[test]
 fn sltiu() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_sltiu.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_sltiu.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -75,7 +90,9 @@ fn sltiu() {
 
 #[test]
 fn srai() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_srai.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_srai.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -85,7 +102,9 @@ fn srai() {
 
 #[test]
 fn srli() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_srli.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_srli.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");
@@ -95,7 +114,9 @@ fn srli() {
 
 #[test]
 fn xori() {
-    let res: RegisterResult = test_runner::run_test("instruction_tests/test_xori.bin", HAZARD, FORWARD);
+    let file = "instruction_tests/test_xori.bin";
+    test_runner::result_to_csv(file, TO_FILE);
+    let res: RegisterResult = test_runner::run_test(file, HAZARD, FORWARD);
     println!("ISA:");
     res.isa.iter().for_each(|f| print!("{}, ", f));
     println!("Pipeline:");

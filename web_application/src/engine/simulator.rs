@@ -239,7 +239,7 @@ impl SimulatorEngine {
             gloo_dialogs::alert(&message[..]);
             self.running = false;
         }
-        if !self.stall {
+        if !self.stall && self.pc < self.program_len {
             self.pc = self.pc_src;
         }
     }
