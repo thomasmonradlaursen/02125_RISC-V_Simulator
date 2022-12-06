@@ -108,43 +108,47 @@ impl Component for Model {
     fn view(&self, ctx: &Context<Self>) -> Html {    
         html! {
             <>
-            <div class = "container">
-                <div class = "controls">
-                    <input lang="en" type = "file" onchange={ctx.link().callback(move |e: Event| {
-                            let mut result = Vec::new();
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            if let Some(files) = input.files() {
-                                let files = js_sys::try_iter(&files)
-                                    .unwrap()
-                                    .unwrap()
-                                    .map(|v| web_sys::File::from(v.unwrap()))
-                                    .map(File::from);
-                                result.extend(files);
-                            }
-                            Msg::Files(match result.get(0) {Some(file) => file.clone(), None => File::new("", "")})
-                        })}
-                    />
-                    <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
-                    <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
-                    <button onclick={ctx.link().callback(|_| Msg::Reset)}>{ "Reset" }</button>
-                    <button class={if self.hazard {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
-                    <button class={if self.forwarding {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
+                <div class = "container">
+                    <div class = "controls">
+                        <input lang="en" type = "file" onchange={ctx.link().callback(move |e: Event| {
+                                let mut result = Vec::new();
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                if let Some(files) = input.files() {
+                                    let files = js_sys::try_iter(&files)
+                                        .unwrap()
+                                        .unwrap()
+                                        .map(|v| web_sys::File::from(v.unwrap()))
+                                        .map(File::from);
+                                    result.extend(files);
+                                }
+                                Msg::Files(match result.get(0) {Some(file) => file.clone(), None => File::new("", "")})
+                            })}
+                        />
+                        <button onclick={ctx.link().callback(|_| Msg::RunSimulator(false))}>{ "Full execution" }</button>
+                        <button onclick={ctx.link().callback(|_| Msg::RunSimulator(true))}>{ "Stepwise" }</button>
+                        <button onclick={ctx.link().callback(|_| Msg::Reset)}>{ "Reset" }</button>
+                        <button class={if self.hazard {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
+                        <button class={if self.forwarding {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
+                    </div>
+                    {Self::display_registers(&self.engine.reg)}
+                    {Self::display_instructions(&self.file)}
+                    <div class="stages">
+                        {Self::display_stage("Fetch", &printer::to_assembly(&self.engine.pc_instruction))}
+                        {Self::display_stage("Decode", &printer::to_assembly(&self.engine.if_id.decode.instruction))}
+                        {Self::display_stage("Execute", &printer::to_assembly(&self.engine.id_ex.execute.instruction))}
+                        {Self::display_stage("Memory access", &printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
+                        {Self::display_stage("Writeback", &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
+                    </div>
+                    <div class="datapath">
+                        {Self::label_datapath()}
+                        {Self::label_configs(&self.hazard, &self.forwarding)}
+                        <canvas width="1160pt" height="600pt" ref={self.node_ref.clone()}/>
+                    </div>
+                    <div class = "pc-cycles">
+                        <p class="pc_display">{"Program counter"}<br/>{self.engine.pc}</p>
+                        <p class="cycles_display">{"Clock cycles"}<br/>{self.engine.cycles}</p>
+                    </div>
                 </div>
-            {Self::display_registers(&self.engine.reg)}
-            {Self::display_instructions(&self.file)}
-            <div class="stages">
-            {Self::display_stage("Fetch", &printer::to_assembly(&self.engine.pc_instruction))}
-            {Self::display_stage("Decode", &printer::to_assembly(&self.engine.if_id.decode.instruction))}
-            {Self::display_stage("Execute", &printer::to_assembly(&self.engine.id_ex.execute.instruction))}
-            {Self::display_stage("Memory access", &printer::to_assembly(&self.engine.ex_mem.mem.instruction))}
-            {Self::display_stage("Writeback", &printer::to_assembly(&self.engine.mem_wb.wb.instruction))}
-            </div>
-            <div class="datapath">
-            {Self::label_datapath()}
-            {Self::label_configs(&self.hazard, &self.forwarding)}
-            <canvas width="1160pt" height="600pt" ref={self.node_ref.clone()}/>
-            </div>
-            </div>
             </>
         }
     }
