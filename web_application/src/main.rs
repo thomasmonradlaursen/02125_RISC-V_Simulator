@@ -1,3 +1,7 @@
+// NOTE: Yew has a bunch of great examples, two of which have been used for this project.
+// Source code from "file_upload" and "webgl" have been implemented in this project, and modicifed to fit the use.
+// Both can be found on the following link: https://github.com/yewstack/yew/tree/master/examples
+
 use engine::simulator::SimulatorEngine;
 use graphics::pipelines;
 use misc::printer;
