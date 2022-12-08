@@ -286,7 +286,6 @@ impl Model {
             gl_Position = vec4(a_position, 0.0, 1.0);
         }";
         let frag_code = "precision mediump float;
-        uniform float u_time;
         void main() {
             float r = 0.0;
             float g = 0.0;
