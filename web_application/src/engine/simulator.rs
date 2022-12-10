@@ -63,6 +63,7 @@ impl Default for SimulatorEngine {
 
 impl SimulatorEngine {
     pub fn run_engine(&mut self, stepwise: bool, hazard: bool, forward: bool) {
+        let mut ebreak: bool = false;
         while self.running {
             // Reset for next cycle
             self.branch = false;
@@ -71,8 +72,6 @@ impl SimulatorEngine {
 
             let next_instruction = &self.mem[(self.pc)..(self.pc + 4)];
 
-            // Print state of pipeline registers
-            // NEEDS TO BE FIXED:
             self.pc_instruction = i32::from_le_bytes([
                 self.mem[self.pc],
                 self.mem[self.pc + 1],
@@ -93,6 +92,10 @@ impl SimulatorEngine {
                     &mut self.if_id.decode,
                     &mut self.id_ex.decode,
                     &self.reg,
+                    &mut self.pc_src,
+                    &mut self.program_len,
+                    &mut ebreak,
+                    &mut self.if_id.fetch,
                 );
             }
 
@@ -101,8 +104,6 @@ impl SimulatorEngine {
                 &mut self.ex_mem.execute,
                 &mut self.pc_src,
                 &mut self.branch,
-                &self.reg,
-                &self.program_len,
                 &mut self.running
             );
 
@@ -209,7 +210,7 @@ impl SimulatorEngine {
                 self.mem[self.pc + 3],
             ]);
 
-            if stepwise {
+            if stepwise || ebreak {
                 break;
             }
         }

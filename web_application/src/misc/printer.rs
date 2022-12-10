@@ -190,8 +190,16 @@ pub fn to_assembly(instruction: &i32) -> String {
         0x6F => {
             return format!("jal x{} {}", rd, uj_format(&instruction));
         }
-        0x73 => {
-            return format!("ecall");
+        0x73 => match rs2 {
+            0x00 => {
+                return format!("ecall");
+            }
+            0x01 => {
+                return format!("ebreak");
+            }
+            _ => {
+                return format!("Unknown instruction")
+            }
         }
         _ => return format!("Unknown instruction"),
     }

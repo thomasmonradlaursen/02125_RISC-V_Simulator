@@ -1,4 +1,7 @@
-use crate::engine::components::{control::Control, registers::{IFID, IDEX}};
+use crate::engine::components::{
+    control::Control,
+    registers::{IDEX, IFID},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Decoding {
@@ -45,14 +48,32 @@ pub fn update_for_execution(decode: &mut IDEX, execute: &mut IDEX, reg: &[i32; 3
     execute.decoding.rs2 = reg[decode.rs2];
 }
 
-pub fn decode_to_register(decode_a: &mut IFID, decode_b: &mut IDEX, reg: &[i32; 32]) {
+pub fn decode_to_register(
+    decode_a: &mut IFID,
+    decode_b: &mut IDEX,
+    reg: &[i32; 32],
+    pc_src: &mut usize,
+    program_len: &mut usize,
+    ebreak: &mut bool,
+    fetch: &mut IFID,
+) {
     decode_b.instruction = decode_a.instruction;
     decode_b.pc = decode_a.pc;
     decode_b.rd = ((decode_a.instruction >> 7) & 0x01f) as usize;
     decode_b.rs1 = ((decode_a.instruction >> 15) & 0x01f) as usize;
     decode_b.rs2 = ((decode_a.instruction >> 20) & 0x01f) as usize;
-    decode_b.decoding = decode_instruction(&decode_a.instruction, &decode_b.rs1, &decode_b.rs2, reg);
+    decode_b.decoding =
+        decode_instruction(&decode_a.instruction, &decode_b.rs1, &decode_b.rs2, reg);
     decode_b.control = Control::compute_control(&decode_b.decoding.opcode);
+    environmental_calls(
+        &decode_b.decoding.opcode,
+        &decode_b.rs2,
+        reg,
+        pc_src,
+        program_len,
+        ebreak,
+        fetch,
+    )
 }
 
 pub fn decode_instruction(
@@ -96,4 +117,33 @@ fn s_offset(instruction: &i32) -> i32 {
     let bit40 = (instruction >> 7) & 0x1f;
     let bit115 = (instruction >> 25) << 5;
     bit40 | bit115
+}
+
+fn environmental_calls(
+    opcode: &i32,
+    rs2: &usize,
+    reg: &[i32; 32],
+    pc_src: &mut usize,
+    program_len: &mut usize,
+    ebreak: &mut bool,
+    fetch: &mut IFID,
+) {
+    match opcode {
+        0x73 => match rs2 {
+            0x00 => {
+                if reg[17] == 10 {
+                    *fetch = IFID {
+                        ..Default::default()
+                    };
+                    fetch.instruction = 0x1000;
+                    *pc_src = *program_len;
+                }
+            }
+            0x01 => {
+                *ebreak = true;
+            }
+            _ => (),
+        },
+        _ => (),
+    }
 }
