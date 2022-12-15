@@ -27,6 +27,7 @@ pub enum Msg {
     Forwarding,
     Reset,
     Render,
+    MemReg,
 }
 
 pub struct Model {
@@ -38,6 +39,7 @@ pub struct Model {
     gl: Option<GL>,
     node_ref: NodeRef,
     render_loop: Option<AnimationFrame>,
+    mem_reg: bool,
 }
 
 impl Component for Model {
@@ -54,6 +56,7 @@ impl Component for Model {
             gl: None,
             node_ref: NodeRef::default(),
             render_loop: None,
+            mem_reg: true,
         }
     }
 
@@ -107,6 +110,10 @@ impl Component for Model {
                 self.hazard = !self.hazard;
                 true
             }
+            Msg::MemReg => {
+                self.mem_reg = !self.mem_reg;
+                true
+            }
         }
     }
     fn view(&self, ctx: &Context<Self>) -> Html {    
@@ -134,7 +141,14 @@ impl Component for Model {
                         <button class={if self.hazard {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Hazard)}>{"Hazard detection"}</button>
                         <button class={if self.forwarding {"config_active"} else {"config_inactive"}} onclick={ctx.link().callback(|_| Msg::Forwarding)}>{"Data forwarding"}</button>
                     </div>
-                    {Self::display_registers(&self.engine.reg)}
+                    <div class="registers">
+                    if self.mem_reg {
+                        {Self::display_registers(&self.engine.reg)}
+                    } else {
+                        {Self::display_memory(&self.engine.mem)}
+                    }
+                    <button onclick={ctx.link().callback(|_| Msg::MemReg)}>{ "Switch memory / registers" }</button>
+                    </div>
                     {Self::display_instructions(&self.file)}
                     <div class="stages">
                         {Self::display_stage("Fetch", &printer::to_assembly(&self.engine.pc_instruction))}
@@ -239,42 +253,103 @@ impl Model {
     fn display_instructions(file: &(String, Vec<u8>)) -> Html {
         let instructions = printer::instructions_as_assembly(&file.1);
         html!{
-        <div class = "instructions">
-            <p>{String::from("Instructions")}</p>
+            <>
+            <div class="instructions">
             <table border="1">
+            <thead><tr>
+            <th colspan="2" position="fixed">{"Instructions"}</th>
+            </tr>
+            <tr>
+            <th width="30%">{"Address"}</th>
+            <th width="70%">{"Instruction"}</th>
+            </tr>
+            </thead>
+            <tbody>
             {
                 instructions.into_iter().enumerate().map(|(address, instruction)| {
                     html!{
                         <tr>
-                            <td width="20%">{format!("{:04x}", address*4)}</td>
-                            <td width="80%">{instruction}</td>
+                        <td width="30%">{format!("{:04x}", address*4)}</td>
+                        <td width="70%">{instruction}</td>
                         </tr>
                     }
                 }).collect::<Html>()
             }
+            </tbody>
             </table>
         </div>
+        </>
         }
     } 
     fn display_registers(registers: &[i32; 32]) -> Html {
         html!{
-            <div class = "registers">
-            <p>{ format!("Register values:")}</p>
+            <>
+            <div style="overflow-y:auto;grid-row:1/9; border-bottom: 1pt solid black">
             <table border = "1">
+            <thead><tr>
+            <th colspan="2" position="fixed">{"Registers"}</th>
+            </tr>
+            <tr>
+            <th width="30%">{"Register"}</th>
+            <th width="70%">{"Value"}</th>
+            </tr>
+            </thead>
+            <tbody>
             {
                 registers.into_iter().enumerate().map(|(count, register)| {
                     html!{
                         <>
                         <tr>
-                            <td width="20%">{format!("x{}", count)}</td>
-                            <td width="80%">{register}</td>
+                        <td width="32%">{format!("x{}", count)}</td>
+                        <td width="68%">{register}</td>
                         </tr>
                         </>
                     }
                 }).collect::<Html>()
             }
+            </tbody>
             </table>
             </div>
+            </>
+        }
+    }
+    fn display_memory(memory: &[u8; 262144]) -> Html {
+        html!{
+            <>
+            <div style="overflow-y:auto;grid-row:1/9; border-bottom: 1pt solid black">
+            <table class="table-border">
+            <thead>
+            <tr>
+            <th colspan="5" position="fixed">{"Memory"}</th>
+            </tr>
+            <tr>
+            <th width="32%">{"Address"}</th>
+            <th width="17%">{"+0"}</th>
+            <th width="17%">{"+1"}</th>
+            <th width="17%">{"+2"}</th>
+            <th width="17%">{"+3"}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {
+                memory[0..512].chunks(4).into_iter().enumerate().rev().map(|(address, mem2)| {
+                    html!{
+                        <>
+                        <tr>
+                            <td width="32%">{format!("{:04x}", address*4)}</td>
+                            <td width="17%">{format!("{:02x}", mem2[0])}</td>
+                            <td width="17%">{format!("{:02x}", mem2[1])}</td>
+                            <td width="17%">{format!("{:02x}", mem2[2])}</td>
+                            <td width="17%">{format!("{:02x}", mem2[3])}</td>
+                        </tr>
+                        </>
+                    }
+                }).collect::<Html>()
+            }
+            </tbody>
+            </table>
+            </div>
+            </>
         }
     }
     fn render_datapath(&mut self, link: &Scope<Self>) {
