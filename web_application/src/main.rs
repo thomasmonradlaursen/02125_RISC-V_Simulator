@@ -85,7 +85,7 @@ impl Component for Model {
                     gloo_file::callbacks::read_as_bytes(&file, move |res| {
                         link.send_message(Msg::LoadedBytes(
                             file_name,
-                            res.expect("failed to read file"),
+                            res.expect("Failed to read file."),
                         ))
                     })
                 };
