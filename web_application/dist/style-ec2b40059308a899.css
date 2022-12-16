@@ -131,8 +131,6 @@
 }
 
 .registers button {
-    grid-row-start: 9;
-    grid-row-end: 10;
     margin: 1em;
 }
 
